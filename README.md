@@ -1,4 +1,4 @@
-# Holy Lang
+# Holy Script
 
 An interpreted programming language with archaic/biblical English syntax, implemented in Rust.
 
@@ -8,7 +8,7 @@ An interpreted programming language with archaic/biblical English syntax, implem
 
 ```bash
 git clone <repo>
-cd holy-lang
+cd holy-script
 
 # run directly
 cargo run -- program.holy
