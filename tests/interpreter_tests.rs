@@ -30,9 +30,22 @@ amen
 }
 
 #[test]
-fn division_by_zero_is_runtime_error() {
+fn division_by_zero_becomes_builtin_sin() {
     let msg = run_err("let there x of atom be 1 over 0\namen\n");
-    assert!(msg.contains("zero"), "got: {msg}");
+    assert!(msg.contains("DivisionByZero"), "got: {msg}");
+}
+
+#[test]
+fn confess_catches_builtin_division_by_zero() {
+    let i = run(r#"let there caught of word be "no"
+
+confess
+    let there x of atom be 1 over 0
+answer for DivisionByZero as err
+    caught become message from err
+amen
+"#);
+    assert_eq!(get_str(&i, "caught"), "division by zero");
 }
 
 // ── Condicional ──────────────────────────────────────────────────
@@ -126,6 +139,35 @@ amen
     assert_eq!(get_int(&i, "px"), 3);
 }
 
+#[test]
+fn undefined_custom_field_type_becomes_builtin_sin() {
+    let msg = run_err(r#"scripture id
+    a of parse
+
+hail proclaim praying "passei"
+
+let there var of id be manifest id praying "number"
+
+hail proclaim praying a from var
+
+amen
+"#);
+    assert!(msg.contains("UndefinedType"), "got: {msg}");
+    assert!(msg.contains("parse"), "got: {msg}");
+}
+
+#[test]
+fn manifest_checks_field_type() {
+    let msg = run_err(r#"scripture Id
+    a of atom
+
+let there var of Id be manifest Id praying "number"
+amen
+"#);
+    assert!(msg.contains("TypeError"), "got: {msg}");
+    assert!(msg.contains("Id.a"), "got: {msg}");
+}
+
 // ── Salm ─────────────────────────────────────────────────────────
 
 #[test]
@@ -152,6 +194,18 @@ let there r of atom be hail doubled upon b
 amen
 "#);
     assert_eq!(get_int(&i, "r"), 42);
+}
+
+#[test]
+fn salm_argument_type_is_checked() {
+    let msg = run_err(r#"salm add_one receiving a of atom reveals atom
+    reveal a plus 1
+
+let there r of atom be hail add_one praying "oops"
+amen
+"#);
+    assert!(msg.contains("TypeError"), "got: {msg}");
+    assert!(msg.contains("parameter 'a'"), "got: {msg}");
 }
 
 // ── Sin / Confess ─────────────────────────────────────────────────
@@ -203,6 +257,19 @@ amen
     assert!(msg.contains("A"), "got: {msg}");
 }
 
+#[test]
+fn confess_catches_builtin_undefined_variable() {
+    let i = run(r#"let there caught of word be "no"
+
+confess
+    let there x of atom be missing plus 1
+answer for UndefinedVariable as err
+    caught become message from err
+amen
+"#);
+    assert!(get_str(&i, "caught").contains("missing"));
+}
+
 // ── Covenant / Discern ───────────────────────────────────────────
 
 #[test]
@@ -244,7 +311,7 @@ amen
 }
 
 #[test]
-fn discern_no_match_no_otherwise_is_runtime_error() {
+fn discern_no_match_no_otherwise_becomes_builtin_sin() {
     let msg = run_err(r#"covenant X
     A
     B
@@ -256,5 +323,107 @@ discern v
         hail proclaim praying "a"
 amen
 "#);
-    assert!(msg.contains("B") || msg.contains("discern") || msg.contains("variante"), "got: {msg}");
+    assert!(msg.contains("InvalidDiscern"), "got: {msg}");
+}
+
+// ── Covenant data variants ────────────────────────────────────────
+
+#[test]
+fn covenant_data_variant_manifest_and_bearing() {
+    let i = run(r#"covenant Result
+    Ok
+        value of atom
+    Err
+        message of word
+
+let there r of Result be manifest Ok praying 42
+let there out of atom be 0
+
+discern r
+    as Ok bearing v
+        out become v
+    as Err bearing msg
+        out become 0
+amen
+"#);
+    assert_eq!(get_int(&i, "out"), 42);
+}
+
+#[test]
+fn covenant_data_variant_err_branch() {
+    let i = run(r#"covenant Result
+    Ok
+        value of atom
+    Err
+        message of word
+
+let there r of Result be manifest Err praying "fail"
+let there out of word be ""
+
+discern r
+    as Ok bearing v
+        out become "ok"
+    as Err bearing msg
+        out become msg
+amen
+"#);
+    assert_eq!(get_str(&i, "out"), "fail");
+}
+
+#[test]
+fn covenant_unit_variant_still_works_alongside_data_variant() {
+    let i = run(r#"covenant Shape
+    Circle
+        radius of fractional
+    Dot
+
+let there s of Shape be Dot
+let there out of word be ""
+
+discern s
+    as Circle bearing r
+        out become "circle"
+    as Dot
+        out become "dot"
+amen
+"#);
+    assert_eq!(get_str(&i, "out"), "dot");
+}
+
+#[test]
+fn covenant_data_variant_type_error_becomes_builtin_sin() {
+    let msg = run_err(r#"covenant Box
+    Wrap
+        value of atom
+
+let there b of Box be manifest Wrap praying "wrong"
+amen
+"#);
+    assert!(msg.contains("TypeError"), "got: {msg}");
+}
+
+#[test]
+fn covenant_unit_variant_via_manifest_is_error() {
+    let msg = run_err(r#"covenant Tag
+    Plain
+    Rich
+        label of word
+
+let there t of Tag be manifest Plain praying "oops"
+amen
+"#);
+    assert!(msg.contains("InvalidArgumentCount"), "got: {msg}");
+}
+
+#[test]
+fn covenant_data_variant_without_manifest_is_error() {
+    let msg = run_err(r#"covenant Option
+    Some
+        value of atom
+    None
+
+let there o of Option be Some
+amen
+"#);
+    assert!(msg.contains("InvalidArgumentCount"), "got: {msg}");
 }

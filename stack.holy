@@ -1,0 +1,18 @@
+
+conv
+
+
+scripture StackNode
+    val of atom
+    next of StackNode
+
+scripture Stack
+    head of StackNode
+
+salm insert upon Stack receiving a of atom reveals void
+    whether  negate head from its 
+        transgress DivisionByZero praying "aaaaaaa"
+
+let there stack of Stack be manifest Stack praying 
+
+amen

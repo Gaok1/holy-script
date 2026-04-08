@@ -82,7 +82,10 @@ fn parses_covenant() {
     assert!(matches!(
         p.top_decls.first(),
         Some(TopDecl::Covenant { name, variants })
-            if name == "Dir" && variants == &["Left", "Right"]
+            if name == "Dir"
+            && variants.len() == 2
+            && variants[0].name == "Left"
+            && variants[1].name == "Right"
     ));
 }
 

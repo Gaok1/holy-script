@@ -1,17 +1,17 @@
 {
-    "name": "holy-lang",
-    "displayName": "Holy Language",
-    "description": "Syntax highlighting, snippets, file icons and run support for Holy Lang",
-    "version": "0.1.1",
+    "name": "holy-script",
+    "displayName": "Holy Script",
+    "description": "Syntax highlighting, snippets, file icons and run support for Holy Script",
+    "version": "0.1.4",
     "publisher": "Gaok1",
     "icon": "icon.png",
     "license": "MIT",
     "engines": { "vscode": "^1.75.0" },
     "categories": ["Programming Languages"],
-    "keywords": ["holy", "holy-lang", "holyscript"],
+    "keywords": ["holy", "holy-script", "holyscript"],
     "repository": {
         "type": "git",
-        "url": "https://github.com/gaok1/holy-lang"
+        "url": "https://github.com/Gaok1/holy-script"
     },
     "main": "./extension.js",
     "activationEvents": [

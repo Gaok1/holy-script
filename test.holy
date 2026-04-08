@@ -1,15 +1,45 @@
 
+sin IsNotFromChurch
+    message of word
+
+scripture Pessoa
+    name of word
+    is_from_church of dogma
+    
+salm print_is_from_church upon Pessoa reveals void
+    whether is_from_church from its 
+        hail proclaim praying name from its plus " é da igreja"
+    otherwise
+        transgress IsNotFromChurch praying name from its plus " HEREGE!"
+
+salm sum receiving num1 of atom and num2 of atom reveals atom
+    reveal num1 plus num2 times 10
+
+let there tupac of Pessoa be manifest Pessoa praying "tupacao" and forsaken
 
 
+confess -- try
+    hail print_is_from_church upon tupac
+answer for IsNotFromChurch as heresy -- catch(IsNotFromChurchException heresy)
+    hail proclaim praying message from heresy
+absolve  -- finally
+    hail proclaim praying "sempre executa este bloco"
 
 
+let there i of atom be 0
 
+litany for blessed
+    i become i plus 1    
+    whether i lesser than 10
+        ascend
+    otherwise
+        forsake
 
-let there num of atom be 20
+    hail proclaim praying "não passei por aqui"
 
+hail proclaim praying "Fim do loop"
 
-num  become 20 minus 2 plus 30
-
-hail proclaim praying  num
 
 amen
+
+

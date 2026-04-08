@@ -1,27 +1,67 @@
-mod lexer;
-mod ast;
-mod parser;
-mod interpreter;
-mod tree;
-
+use std::io::IsTerminal;
 use std::{env, fs, process};
 
-use lexer::tokenize;
-use parser::{Parser, ParseError};
-use interpreter::Interpreter;
+use holy_script::interpreter::Interpreter;
+use holy_script::lexer::{Token, tokenize};
+use holy_script::parser::{ParseError, Parser};
+use holy_script::tree;
+
+fn use_color() -> bool {
+    std::io::stderr().is_terminal() && env::var_os("NO_COLOR").is_none()
+}
+
+fn red_bold(text: &str) -> String {
+    if use_color() {
+        format!("\x1b[1;31m{}\x1b[0m", text)
+    } else {
+        text.to_string()
+    }
+}
+
+fn red(text: &str) -> String {
+    if use_color() {
+        format!("\x1b[31m{}\x1b[0m", text)
+    } else {
+        text.to_string()
+    }
+}
+
+fn yellow(text: &str) -> String {
+    if use_color() {
+        format!("\x1b[33m{}\x1b[0m", text)
+    } else {
+        text.to_string()
+    }
+}
+
+fn gray(text: &str) -> String {
+    if use_color() {
+        format!("\x1b[90m{}\x1b[0m", text)
+    } else {
+        text.to_string()
+    }
+}
+
+fn bold(text: &str) -> String {
+    if use_color() {
+        format!("\x1b[1m{}\x1b[0m", text)
+    } else {
+        text.to_string()
+    }
+}
 
 fn report_parse_error(source: &str, e: &ParseError) {
-    eprintln!("\n\x1b[1;31msyntax error\x1b[0m — line {}, column {}:", e.line, e.col);
+    eprintln!("\n{} - line {}, column {}:", red_bold("syntax error"), e.line, e.col);
 
     if e.line > 0 {
         if let Some(line_src) = source.lines().nth(e.line - 1) {
-            eprintln!("  \x1b[90m{:>4} │\x1b[0m {}", e.line, line_src);
+            eprintln!("  {} | {}", gray(&format!("{:>4}", e.line)), line_src);
             let arrow_pad = e.col.saturating_sub(1);
-            eprintln!("       \x1b[1;31m{}^\x1b[0m", " ".repeat(arrow_pad));
+            eprintln!("       {}", red_bold(&format!("{}^", " ".repeat(arrow_pad))));
         }
     }
 
-    eprintln!("  \x1b[33m{}\x1b[0m\n", e.message);
+    eprintln!("  {}\n", yellow(&e.message));
 }
 
 fn main() {
@@ -42,19 +82,27 @@ fn main() {
     let tokens = tokenize(&source);
 
     // Validate 'amen'
-    let amens: Vec<_> = tokens.iter().filter(|s| s.token == lexer::Token::Amen).collect();
+    let amens: Vec<_> = tokens.iter().filter(|s| s.token == Token::Amen).collect();
     match amens.len() {
         0 => {
-            eprintln!("\n\x1b[1;31merror\x1b[0m: every holy program must end with \x1b[1mamen\x1b[0m\n");
+            eprintln!(
+                "\n{}: every holy program must end with {}\n",
+                red_bold("error"),
+                bold("amen")
+            );
             process::exit(1);
         }
         1 => {} // ok
         n => {
-            eprintln!("\n\x1b[1;31merror\x1b[0m: found {} 'amen' tokens — exactly one is required (at the end):", n);
+            eprintln!(
+                "\n{}: found {} 'amen' tokens - exactly one is required at the end:",
+                red_bold("error"),
+                n
+            );
             for sp in &amens {
                 if let Some(line_src) = source.lines().nth(sp.line - 1) {
-                    eprintln!("  \x1b[90m{:>4} │\x1b[0m {}", sp.line, line_src);
-                    eprintln!("       \x1b[1;31m{}^\x1b[0m", " ".repeat(sp.col.saturating_sub(1)));
+                    eprintln!("  {} | {}", gray(&format!("{:>4}", sp.line)), line_src);
+                    eprintln!("       {}", red_bold(&format!("{}^", " ".repeat(sp.col.saturating_sub(1)))));
                 }
             }
             eprintln!();
@@ -77,7 +125,7 @@ fn main() {
     // Interpret
     let mut interp = Interpreter::new();
     if let Err(e) = interp.run(&program) {
-        eprintln!("\x1b[31mruntime error:\x1b[0m {}", e);
+        eprintln!("{}: {}", red("error"), e);
         process::exit(1);
     }
 }

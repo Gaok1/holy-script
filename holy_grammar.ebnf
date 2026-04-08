@@ -14,14 +14,15 @@ top_decl    ::= salm
 
 -- TESTAMENTS (modules)
 -- without "revealing": imports everything
--- with "revealing": imports only the listed symbols (scriptures, salms, etc.)
+-- with "revealing": imports only the listed symbols (scriptures, salms, covenants, etc.)
 testament   ::= "testament" ident ("revealing" reveal_list)?
 
 reveal_list ::= ident ("," ident)*
 
 
 -- SCRIPTURES (struct definition — pure data, no behaviour)
-scripture   ::= "scripture" ident INDENT field+ DEDENT
+-- may declare type parameters: "scripture Pair of T, E"
+scripture   ::= "scripture" ident ("of" type_param_list)? INDENT field+ DEDENT
 
 field       ::= ident "of" type
 
@@ -31,18 +32,24 @@ field       ::= ident "of" type
 sin_decl    ::= "sin" ident (INDENT field+ DEDENT)?
 
 
--- COVENANTS (sum types — simple variants with no associated data)
-covenant    ::= "covenant" ident INDENT variant+ DEDENT
+-- COVENANTS (sum types — variants may be unit or carry named fields)
+-- may declare type parameters: "covenant Option of T"
+covenant    ::= "covenant" ident ("of" type_param_list)? INDENT variant+ DEDENT
 
-variant     ::= ident
+-- a variant with an indented field block carries data; without one it is a unit variant
+variant     ::= ident (INDENT field+ DEDENT)?
+
+-- one or more type parameter names
+type_param_list ::= ident ("," ident)*
 
 
 -- SALMS (regular function definition)
-salm        ::= "salm" ident ("receiving" param_list)? "reveals" type block
+-- may declare type parameters: "salm wrap of T receiving ..."
+salm        ::= "salm" ident ("of" type_param_list)? ("receiving" param_list)? "reveals" type block
 
 -- SALMS BOUND TO SCRIPTURES
 -- "upon" signals binding — "its" is available inside the body as a reference to the instance
-method_salm ::= "salm" ident "upon" ident ("receiving" param_list)? "reveals" type block
+method_salm ::= "salm" ident "upon" ident ("of" type_param_list)? ("receiving" param_list)? "reveals" type block
 
 param_list  ::= param ("," param)*
 param       ::= ident "of" type
@@ -72,8 +79,8 @@ decl        ::= "let there be" ident "of" type
 assign      ::= ident "become" expr
 
 -- invocation as a statement
-invocation  ::= "hail" ident "upon" ident ("praying" arg_list)?   -- method_salm
-            |   "hail" ident ("praying" arg_list)?                 -- regular salm
+invocation  ::= "hail" ident "upon" ident ("praying" arg_list)?                    -- method_salm
+            |   "hail" ident ("of" type ("," type)*)? ("praying" arg_list)?        -- regular salm, optionally generic
 
 -- return value from a salm
 reveal_stmt ::= "reveal" expr
@@ -83,7 +90,7 @@ transgress  ::= "transgress" ident ("praying" arg_list)?
                 -- ident is the sin type; args are the fields in declaration order
 
 -- loop control
--- "forsake" breaks out of the litany
+-- "forsake" breaks out of the litany (break)
 -- "ascend"  skips to the next iteration (continue)
 loop_control ::= "forsake"
              |   "ascend"
@@ -102,16 +109,17 @@ loop        ::= "litany for" expr block
 -- SINS (exceptions)
 -- each "answer for" clause catches a distinct sin type
 -- "as ident" is optional — only needed when the sin's fields must be accessed
--- "absolve" is equivalent to "finally": always runs, with or without an error
+-- "absolve" is equivalent to finally: always runs, with or without an error
 sin_handler ::= "confess" block
                 ("answer for" ident ("as" ident)? block)+
                 ("absolve" block)?
 
 
 -- DISCERN (pattern matching on a covenant variant)
+-- "bearing" binds the variant's fields positionally to local names
 -- "otherwise" is the default case — optional if all variants are covered
 discern     ::= "discern" ident INDENT
-                ("as" ident block)+
+                ("as" ident ("bearing" ident ("," ident)*)? block)+
                 ("otherwise" block)?
                 DEDENT
 
@@ -123,6 +131,7 @@ discern     ::= "discern" ident INDENT
 --   comparison < addition/subtraction < multiplication/division/remainder < negation < atoms
 --
 --   comparisons do not chain: (a > b > c) is invalid
+--   no implicit grouping — use intermediate variables to reorder evaluation
 
 expr        ::= cmp_expr
 
@@ -135,13 +144,15 @@ term        ::= unary (("times" | "over" | "remainder") unary)*
 -- unary negation — "negate x" is equivalent to -x
 unary       ::= "negate" atom | atom
 
-atom        ::= "hail" ident "upon" ident ("praying" arg_list)?    -- method_salm call
-            |   "hail" ident ("praying" arg_list)?                 -- regular salm call
-            |   "manifest" ident ("praying" arg_list)?             -- instantiate a scripture
-            |   ident "from" ident                                 -- field access on a variable
-            |   ident "from" "its"                                 -- field access inside method_salm
+atom        ::= "hail" ident "upon" ident ("praying" arg_list)?                    -- method_salm call
+            |   "hail" ident ("of" type ("," type)*)? ("praying" arg_list)?        -- regular or generic salm call
+            |   "manifest" ident "of" ident ("of" type ("," type)*)? ("praying" arg_list)?  -- instantiate a data variant: manifest some of Option of atom praying 42
+            |   "manifest" ident ("praying" arg_list)?                             -- instantiate a scripture
+            |   ident "of" ident ("of" type ("," type)*)?                          -- unit variant: none of Option of atom
+            |   ident "from" ident                                                 -- field access on a variable
+            |   ident "from" "its"                                                 -- field access inside method_salm
             |   literal
-            |   ident
+            |   ident                                                              -- variable
 
 cmp_op      ::= "is"
             |   "is not"
@@ -155,12 +166,15 @@ arg_list    ::= expr ("," expr)* ("and" expr)?
 
 
 -- TYPES
-type        ::= "atom"        -- int (i64)
-            |   "fractional"  -- float (f64)
-            |   "word"        -- string
-            |   "dogma"       -- bool (blessed | forsaken)
+-- generic types are applied with "of": grace of atom, verdict of atom, word
+type        ::= "atom"                                    -- int (i64)
+            |   "fractional"                              -- float (f64)
+            |   "word"                                    -- string
+            |   "dogma"                                   -- bool (blessed | forsaken)
             |   "void"
-            |   ident         -- user-defined scripture or covenant
+            |   "grace" "of" type                        -- built-in Option: granted | absent
+            |   "verdict" "of" type "," type             -- built-in Result: righteous | condemned
+            |   ident ("of" type ("," type)*)?           -- user-defined scripture or covenant, optionally generic
 
 
 -- LITERALS
@@ -181,17 +195,49 @@ ident       ::= [a-zA-Z_][a-zA-Z0-9_]*
 -- ============================================================
 -- testament  revealing  scripture  sin  covenant  salm  upon  receiving  reveals
 -- let  there  be  of  become  hail  praying  reveal  whether  otherwise  so
--- litany  for  forsake  ascend  confess  answer  absolve  as  transgress
+-- litany  for  forsake  ascend  bearing  confess  answer  absolve  as  transgress
 -- manifest  from  its  amen  discern  negate  remainder
 -- plus  minus  times  over  is  not  greater  lesser  than  no
 -- blessed  forsaken  and  void  atom  fractional  word  dogma
+-- grace  granted  absent  verdict  righteous  condemned
 
 
 -- ============================================================
 --  BUILT-IN SALMS
 -- ============================================================
--- proclaim  receiving val of word    reveals void   -- print with newline
--- herald    receiving val of word    reveals void   -- print without newline
--- inquire                            reveals word   -- read a line from stdin
--- atom_of   receiving val of word    reveals atom   -- convert word → atom
--- word_of   receiving val of void    reveals word   -- convert any value → word
+-- proclaim  receiving val of word               reveals void   -- print with newline
+-- herald    receiving val of word               reveals void   -- print without newline
+-- inquire                                       reveals word   -- read a line from stdin
+-- atom_of   receiving val of word               reveals atom   -- parse word → atom
+-- word_of   receiving val of word               reveals word   -- convert any value → word
+
+
+-- ============================================================
+--  BUILT-IN COVENANTS
+-- ============================================================
+--
+-- grace of T
+--   a value that may or may not exist.
+--   granted — the value was conceded; carries the inner value
+--   absent  — nothing was given; unit variant, no fields
+--
+--   example:
+--     let there g of grace of atom be manifest granted of grace of atom praying 42
+--     discern g
+--         as granted bearing value
+--             hail proclaim praying word_of praying value
+--         as absent
+--             hail proclaim praying "nothing"
+--
+-- verdict of T, E
+--   the outcome of an operation that may fail.
+--   righteous — the operation succeeded; carries the result value
+--   condemned — the operation failed; carries the reason
+--
+--   example:
+--     let there r of verdict of atom, word be hail divide praying 10 and 0
+--     discern r
+--         as righteous bearing value
+--             hail proclaim praying word_of praying value
+--         as condemned bearing reason
+--             hail proclaim praying reason

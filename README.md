@@ -135,6 +135,8 @@ sin SimpleFailure
 
 ## Covenants (enums)
 
+Variants can be unit (no data) or carry named fields.
+
 ```
 covenant Direction
     North
@@ -143,6 +145,38 @@ covenant Direction
     West
 
 let there d of Direction be North
+```
+
+### Variants with data
+
+Declare fields in an indented block under the variant name.  
+Instantiate with `manifest`, just like a scripture.
+
+```
+covenant Result
+    Ok
+        value of atom
+    Err
+        message of word
+    Nothing               -- unit variant (no fields)
+
+let there r of Result be manifest Ok praying 42
+let there e of Result be manifest Err praying "oops"
+let there n of Result be Nothing
+```
+
+### Pattern matching with data binding
+
+Use `bearing` after the variant name inside `discern` to bind fields positionally:
+
+```
+discern r
+    as Ok bearing v
+        hail proclaim praying hail word_of praying v
+    as Err bearing msg
+        hail proclaim praying msg
+    as Nothing
+        hail proclaim praying "nothing"
 ```
 
 ---
@@ -316,7 +350,7 @@ amen
 
 `testament` `revealing` `scripture` `sin` `covenant` `salm` `upon` `receiving` `reveals`
 `let` `there` `be` `of` `become` `hail` `praying` `reveal` `whether` `otherwise`
-`so` `litany` `for` `forsake` `ascend` `confess` `answer` `absolve` `as` `transgress`
+`so` `litany` `for` `forsake` `ascend` `bearing` `confess` `answer` `absolve` `as` `transgress`
 `manifest` `from` `its` `discern` `amen` `negate` `remainder`
 `plus` `minus` `times` `over` `is` `not` `greater` `lesser`
 `than` `no` `blessed` `forsaken` `and` `void` `atom` `fractional` `word` `dogma`

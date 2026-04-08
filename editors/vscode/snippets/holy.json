@@ -94,12 +94,28 @@
         "description": "Loop litany for (while)"
     },
 
+    "forsake (break)": {
+        "prefix": "forsake",
+        "body": [
+            "forsake"
+        ],
+        "description": "Sai imediatamente do litany (break)"
+    },
+
+    "ascend (continue)": {
+        "prefix": "ascend",
+        "body": [
+            "ascend"
+        ],
+        "description": "Pula para a próxima iteração do litany (continue)"
+    },
+
     "confess / answer for (try/catch)": {
         "prefix": "confess",
         "body": [
             "confess",
             "\t${1:hail proclaim praying \"tentativa\"}",
-            "answer for ${2:NomeSin} as ${3:err}",
+            "answer for ${2|DivisionByZero,InvalidArgumentCount,InvalidContext,InvalidDiscern,TypeError,UndefinedField,UndefinedMethod,UndefinedSalm,UndefinedScripture,UndefinedSin,UndefinedVariable,NomeSin|} as ${3:err}",
             "\t${0:hail proclaim praying \"erro capturado\"}"
         ],
         "description": "Bloco confess / answer for"
@@ -110,7 +126,7 @@
         "body": [
             "confess",
             "\t${1:hail proclaim praying \"tentativa\"}",
-            "answer for ${2:NomeSin} as ${3:err}",
+            "answer for ${2|DivisionByZero,InvalidArgumentCount,InvalidContext,InvalidDiscern,TypeError,UndefinedField,UndefinedMethod,UndefinedSalm,UndefinedScripture,UndefinedSin,UndefinedVariable,NomeSin|} as ${3:err}",
             "\t${4:hail proclaim praying \"erro\"}",
             "absolve",
             "\t${0:hail proclaim praying \"sempre\"}"
@@ -145,17 +161,147 @@
     "transgress (throw)": {
         "prefix": "transgress",
         "body": [
-            "transgress ${1:NomeSin} praying ${0:\"mensagem\"}"
+            "transgress ${1|DivisionByZero,InvalidArgumentCount,InvalidContext,InvalidDiscern,TypeError,UndefinedField,UndefinedMethod,UndefinedSalm,UndefinedScripture,UndefinedSin,UndefinedVariable,NomeSin|} praying ${0:\"mensagem\"}"
         ],
         "description": "Lança um sin"
     },
 
-    "manifest (instanciar scripture)": {
+    "Builtin Sin: DivisionByZero": {
+        "prefix": "sin.divzero",
+        "body": [
+            "answer for DivisionByZero as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura divisão por zero"
+    },
+
+    "Builtin Sin: InvalidArgumentCount": {
+        "prefix": "sin.argc",
+        "body": [
+            "answer for InvalidArgumentCount as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura quantidade inválida de argumentos"
+    },
+
+    "Builtin Sin: InvalidContext": {
+        "prefix": "sin.context",
+        "body": [
+            "answer for InvalidContext as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura uso inválido de contexto"
+    },
+
+    "Builtin Sin: InvalidDiscern": {
+        "prefix": "sin.discern",
+        "body": [
+            "answer for InvalidDiscern as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura falhas de discern"
+    },
+
+    "Builtin Sin: TypeError": {
+        "prefix": "sin.type",
+        "body": [
+            "answer for TypeError as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura erro de tipo"
+    },
+
+    "Builtin Sin: UndefinedField": {
+        "prefix": "sin.field",
+        "body": [
+            "answer for UndefinedField as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura campo inexistente"
+    },
+
+    "Builtin Sin: UndefinedMethod": {
+        "prefix": "sin.method",
+        "body": [
+            "answer for UndefinedMethod as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura method inexistente"
+    },
+
+    "Builtin Sin: UndefinedSalm": {
+        "prefix": "sin.salm",
+        "body": [
+            "answer for UndefinedSalm as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura salm inexistente"
+    },
+
+    "Builtin Sin: UndefinedScripture": {
+        "prefix": "sin.scripture",
+        "body": [
+            "answer for UndefinedScripture as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura scripture inexistente"
+    },
+
+    "Builtin Sin: UndefinedSin": {
+        "prefix": "sin.sin",
+        "body": [
+            "answer for UndefinedSin as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura sin inexistente"
+    },
+
+    "Builtin Sin: UndefinedVariable": {
+        "prefix": "sin.var",
+        "body": [
+            "answer for UndefinedVariable as ${1:err}",
+            "\t${0:caught become message from err}"
+        ],
+        "description": "Captura variável indefinida"
+    },
+
+    "manifest (instanciar scripture ou covenant variant)": {
         "prefix": "manifest",
         "body": [
-            "manifest ${1:Scripture} praying ${0:args}"
+            "manifest ${1:ScriptureOrVariant} praying ${0:args}"
         ],
-        "description": "Instancia um scripture"
+        "description": "Instancia um scripture ou uma covenant variant com dados"
+    },
+
+    "Covenant (enum unit variants)": {
+        "prefix": "covenant",
+        "body": [
+            "covenant ${1:Nome}",
+            "\t${2:VariantA}",
+            "\t${0:VariantB}"
+        ],
+        "description": "Declara um covenant (enum) com variantes unit"
+    },
+
+    "Covenant com dados (enum data variants)": {
+        "prefix": "covenantd",
+        "body": [
+            "covenant ${1:Nome}",
+            "\t${2:VariantA}",
+            "\t\t${3:campo} of ${4|atom,fractional,word,dogma|}",
+            "\t${0:VariantB}"
+        ],
+        "description": "Declara um covenant com variante portando dados"
+    },
+
+    "discern com bearing (pattern match com dados)": {
+        "prefix": "discernb",
+        "body": [
+            "discern ${1:variavel}",
+            "\tas ${2:Variant} bearing ${3:binding}",
+            "\t\t${0:hail proclaim praying binding}"
+        ],
+        "description": "Pattern match em covenant variant com extração de dados (bearing)"
     },
 
     "hail proclaim": {

@@ -10,16 +10,23 @@
         { "include": "#salm-def" },
         { "include": "#scripture-def" },
         { "include": "#sin-def" },
+        { "include": "#covenant-def" },
         { "include": "#hail-call" },
         { "include": "#manifest-call" },
         { "include": "#testament-decl" },
+        { "include": "#answer-for" },
+        { "include": "#discern-branch" },
+        { "include": "#field-access" },
         { "include": "#multiword-cmp" },
         { "include": "#multiword-decl" },
         { "include": "#multiword-handler" },
         { "include": "#number" },
         { "include": "#boolean" },
         { "include": "#keyword-control" },
+        { "include": "#keyword-control-loop" },
+        { "include": "#keyword-control-bearing" },
         { "include": "#keyword-declaration" },
+        { "include": "#of-type" },
         { "include": "#storage-type" },
         { "include": "#keyword-operator" },
         { "include": "#variable-language" },
@@ -40,7 +47,7 @@
 
         "number": {
             "name": "constant.numeric.holy",
-            "match": "\\b\\d+(\\.\\d+)?\\b"
+            "match": "-?\\b\\d+(\\.\\d+)?\\b"
         },
 
         "boolean": {
@@ -84,6 +91,14 @@
             }
         },
 
+        "covenant-def": {
+            "match": "\\b(covenant)\\s+([a-zA-Z_]\\w*)",
+            "captures": {
+                "1": { "name": "keyword.declaration.class.holy" },
+                "2": { "name": "entity.name.type.holy" }
+            }
+        },
+
         "hail-call": {
             "match": "\\b(hail)\\s+([a-zA-Z_]\\w*)",
             "captures": {
@@ -105,6 +120,24 @@
             "captures": {
                 "1": { "name": "keyword.control.import.holy" },
                 "2": { "name": "entity.name.namespace.holy" }
+            }
+        },
+
+        "answer-for": {
+            "match": "\\b(answer\\s+for)\\s+([a-zA-Z_]\\w+)(?:\\s+(as)\\s+([a-zA-Z_]\\w*))?",
+            "captures": {
+                "1": { "name": "keyword.control.holy" },
+                "2": { "name": "entity.name.type.holy" },
+                "3": { "name": "keyword.other.holy" },
+                "4": { "name": "variable.other.holy" }
+            }
+        },
+
+        "discern-branch": {
+            "match": "\\b(as)\\s+([a-zA-Z_]\\w*)",
+            "captures": {
+                "1": { "name": "keyword.other.holy" },
+                "2": { "name": "entity.name.type.holy" }
             }
         },
 
@@ -164,14 +197,37 @@
             ]
         },
 
+        "field-access": {
+            "comment": "field from obj (from obj)* — highlights each field name as a variable and from/its as keywords",
+            "match": "\\b([a-zA-Z_]\\w*)\\s+(from)\\s+(?:([a-zA-Z_]\\w*)|\\b(its)\\b)",
+            "captures": {
+                "1": { "name": "variable.other.holy" },
+                "2": { "name": "keyword.other.holy" },
+                "3": { "name": "variable.other.holy" },
+                "4": { "name": "variable.language.holy" }
+            }
+        },
+
         "keyword-control": {
             "name": "keyword.control.holy",
-            "match": "\\b(whether|otherwise|confess|absolve|reveal|transgress|amen)\\b"
+            "match": "\\b(whether|otherwise|confess|absolve|reveal|transgress|discern|amen)\\b"
+        },
+
+        "keyword-control-loop": {
+            "comment": "Loop control: forsake = break, ascend = continue (inside litany for)",
+            "name": "keyword.control.flow.holy",
+            "match": "\\b(forsake|ascend)\\b"
+        },
+
+        "keyword-control-bearing": {
+            "comment": "bearing: binds covenant variant fields in a discern branch",
+            "name": "keyword.control.holy",
+            "match": "\\bbearing\\b"
         },
 
         "keyword-declaration": {
             "name": "keyword.declaration.holy",
-            "match": "\\b(become|receiving|reveals|revealing)\\b"
+            "match": "\\b(become|receiving|reveals|revealing|covenant)\\b"
         },
 
         "storage-type": {
@@ -181,12 +237,21 @@
 
         "keyword-operator": {
             "name": "keyword.operator.holy",
-            "match": "\\b(plus|minus|times|over|is|and)\\b"
+            "match": "\\b(plus|minus|times|over|remainder|negate|is|and)\\b"
         },
 
         "variable-language": {
             "name": "variable.language.holy",
             "match": "\\b(its)\\b"
+        },
+
+        "of-type": {
+            "comment": "of <CustomType> — highlights custom scripture/sin type names after 'of'; built-ins are caught by storage-type",
+            "match": "\\b(of)\\s+(?!atom|fractional|word|dogma|void\\b)([a-zA-Z_]\\w*)",
+            "captures": {
+                "1": { "name": "keyword.other.holy" },
+                "2": { "name": "entity.name.type.holy" }
+            }
         },
 
         "keyword-other": {

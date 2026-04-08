@@ -39,10 +39,25 @@ pub enum Expr {
     MethodCall { method: String, target: String, args: Vec<Expr> },
     /// `manifest Scripture (praying args)?`
     Manifest { scripture: String, args: Vec<Expr> },
-    /// `field from object`
-    FieldAccess { field: String, object: String },
-    /// `field from its`  — inside a method_salm
+    /// `field from <expr>`  — supports chaining: `b from fieldComposite from its`
+    FieldAccess { field: String, object: Box<Expr> },
+    /// `field from its`  — inside a method_salm (leaf of a from-chain)
     SelfFieldAccess { field: String },
+}
+
+/// A single variant inside a `covenant` declaration.
+#[derive(Debug, Clone)]
+pub struct CovenantVariantDecl {
+    pub name:   String,
+    pub fields: Vec<(String, HolyType)>, // empty = unit variant
+}
+
+/// A single branch inside a `discern` block.
+#[derive(Debug, Clone)]
+pub struct DiscernBranch {
+    pub variant:  String,
+    pub bindings: Vec<String>, // positional; empty if unit variant
+    pub body:     Vec<Stmt>,
 }
 
 /// A single `answer for` clause inside a `confess` block.
@@ -85,10 +100,10 @@ pub enum Stmt {
         handlers:  Vec<SinHandler>,
         absolve:   Option<Vec<Stmt>>,
     },
-    /// `discern x  as Variant ...`  — pattern match on a covenant variant
+    /// `discern x  as Variant (bearing b1, b2)? ...`  — pattern match on a covenant variant
     Discern {
         target:    String,
-        branches:  Vec<(String, Vec<Stmt>)>,
+        branches:  Vec<DiscernBranch>,
         otherwise: Option<Vec<Stmt>>,
     },
     /// `transgress SinType (praying args)?`  — throw a sin
@@ -124,10 +139,10 @@ pub enum TopDecl {
         name:   String,
         fields: Vec<(String, HolyType)>,
     },
-    /// Sum type with named unit variants (no associated data).
+    /// Sum type with named variants; each variant may carry named fields.
     Covenant {
         name:     String,
-        variants: Vec<String>,
+        variants: Vec<CovenantVariantDecl>,
     },
 }
 

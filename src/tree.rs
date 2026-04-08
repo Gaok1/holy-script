@@ -1,304 +1,270 @@
+use termtree::Tree;
+
 use crate::ast::*;
 
-// ══════════════════════════════════════════════════════════════════
-// Ponto de entrada
-// ══════════════════════════════════════════════════════════════════
-
 pub fn print_program(program: &Program) {
-    println!("Program");
+    println!("{}", build_program_tree(program));
+}
 
-    let total = program.testaments.len() + program.top_decls.len() + program.stmts.len();
-    let mut i = 0;
+fn build_program_tree(program: &Program) -> Tree<String> {
+    let mut root = Tree::new("Program".into());
 
-    for t in &program.testaments {
-        i += 1;
-        print_testament(t, "", i == total);
+    for testament in &program.testaments {
+        root.push(build_testament_tree(testament));
     }
-    for d in &program.top_decls {
-        i += 1;
-        print_top_decl(d, "", i == total);
+    for decl in &program.top_decls {
+        root.push(build_top_decl_tree(decl));
     }
-    for s in &program.stmts {
-        i += 1;
-        print_stmt(s, "", i == total);
+    for stmt in &program.stmts {
+        root.push(build_stmt_tree(stmt));
     }
+
+    root
 }
 
-// ══════════════════════════════════════════════════════════════════
-// Helpers de formatação
-// ══════════════════════════════════════════════════════════════════
-
-fn branch(last: bool) -> &'static str {
-    if last { "└── " } else { "├── " }
-}
-
-fn cont(last: bool) -> &'static str {
-    if last { "    " } else { "│   " }
-}
-
-fn leaf(prefix: &str, last: bool, label: &str) {
-    println!("{}{}{}", prefix, branch(last), label);
-}
-
-fn child_prefix(prefix: &str, last: bool) -> String {
-    format!("{}{}", prefix, cont(last))
-}
-
-/// Lista de children com callback.
-fn children<T, F>(items: &[T], prefix: &str, f: F)
-where
-    F: Fn(&T, &str, bool),
-{
-    let n = items.len();
-    for (i, item) in items.iter().enumerate() {
-        f(item, prefix, i + 1 == n);
-    }
-}
-
-fn type_str(ty: &HolyType) -> String {
-    match ty {
-        HolyType::Atom       => "atom".into(),
-        HolyType::Fractional => "fractional".into(),
-        HolyType::Word       => "word".into(),
-        HolyType::Dogma      => "dogma".into(),
-        HolyType::Void       => "void".into(),
-        HolyType::Custom(n)  => n.clone(),
-    }
-}
-
-fn params_str(params: &[(String, HolyType)]) -> String {
-    if params.is_empty() { return "–".into(); }
-    params.iter()
-        .map(|(n, t)| format!("{}: {}", n, type_str(t)))
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
-// ══════════════════════════════════════════════════════════════════
-// Testament
-// ══════════════════════════════════════════════════════════════════
-
-fn print_testament(t: &Testament, prefix: &str, last: bool) {
-    let rev = t.revealing.as_ref()
-        .map(|r| format!(" revealing {}", r.join(", ")))
+fn build_testament_tree(testament: &Testament) -> Tree<String> {
+    let revealing = testament.revealing.as_ref()
+        .map(|items| format!(" revealing {}", items.join(", ")))
         .unwrap_or_default();
-    leaf(prefix, last, &format!("[testament] {}{}", t.name, rev));
+    Tree::new(format!("[testament] {}{}", testament.name, revealing))
 }
 
-// ══════════════════════════════════════════════════════════════════
-// Top-level declarations
-// ══════════════════════════════════════════════════════════════════
-
-fn print_top_decl(d: &TopDecl, prefix: &str, last: bool) {
-    match d {
+fn build_top_decl_tree(decl: &TopDecl) -> Tree<String> {
+    match decl {
         TopDecl::Scripture { name, fields } => {
-            leaf(prefix, last, &format!("[scripture] {}", name));
-            let cp = child_prefix(prefix, last);
-            children(fields, &cp, |f, p, l| {
-                leaf(p, l, &format!("{}: {}", f.0, type_str(&f.1)));
-            });
+            let mut tree = Tree::new(format!("[scripture] {}", name));
+            for (field_name, field_ty) in fields {
+                tree.push(Tree::new(format!("{}: {}", field_name, type_str(field_ty))));
+            }
+            tree
         }
         TopDecl::SinDecl { name, fields } => {
-            leaf(prefix, last, &format!("[sin] {}", name));
-            if !fields.is_empty() {
-                let cp = child_prefix(prefix, last);
-                children(fields, &cp, |f, p, l| {
-                    leaf(p, l, &format!("{}: {}", f.0, type_str(&f.1)));
-                });
+            let mut tree = Tree::new(format!("[sin] {}", name));
+            for (field_name, field_ty) in fields {
+                tree.push(Tree::new(format!("{}: {}", field_name, type_str(field_ty))));
             }
+            tree
         }
         TopDecl::Covenant { name, variants } => {
-            leaf(prefix, last, &format!("[covenant] {}", name));
-            let cp = child_prefix(prefix, last);
-            children(variants, &cp, |variant, p, l| {
-                leaf(p, l, variant);
-            });
+            let mut tree = Tree::new(format!("[covenant] {}", name));
+            for v in variants {
+                if v.fields.is_empty() {
+                    tree.push(Tree::new(v.name.clone()));
+                } else {
+                    let fields_str = v.fields.iter()
+                        .map(|(fn_, ft)| format!("{}: {}", fn_, type_str(ft)))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    tree.push(Tree::new(format!("{}({})", v.name, fields_str)));
+                }
+            }
+            tree
         }
         TopDecl::Salm { name, params, ret_type, body } => {
-            leaf(prefix, last, &format!(
-                "[salm] {} ({}) → {}",
-                name, params_str(params), type_str(ret_type)
+            let mut tree = Tree::new(format!(
+                "[salm] {} ({}) -> {}",
+                name,
+                params_str(params),
+                type_str(ret_type)
             ));
-            let cp = child_prefix(prefix, last);
-            print_block(body, &cp);
+            for stmt in body {
+                tree.push(build_stmt_tree(stmt));
+            }
+            tree
         }
         TopDecl::MethodSalm { name, target_type, params, ret_type, body } => {
-            leaf(prefix, last, &format!(
-                "[method salm] {} upon {} ({}) → {}",
-                name, target_type, params_str(params), type_str(ret_type)
+            let mut tree = Tree::new(format!(
+                "[method salm] {} upon {} ({}) -> {}",
+                name,
+                target_type,
+                params_str(params),
+                type_str(ret_type)
             ));
-            let cp = child_prefix(prefix, last);
-            print_block(body, &cp);
+            for stmt in body {
+                tree.push(build_stmt_tree(stmt));
+            }
+            tree
         }
     }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// Block
-// ══════════════════════════════════════════════════════════════════
-
-fn print_block(stmts: &[Stmt], prefix: &str) {
-    let n = stmts.len();
-    for (i, s) in stmts.iter().enumerate() {
-        print_stmt(s, prefix, i + 1 == n);
-    }
-}
-
-// ══════════════════════════════════════════════════════════════════
-// Statements
-// ══════════════════════════════════════════════════════════════════
-
-fn print_stmt(stmt: &Stmt, prefix: &str, last: bool) {
+fn build_stmt_tree(stmt: &Stmt) -> Tree<String> {
     match stmt {
         Stmt::DeclNoVal { name, ty } => {
-            leaf(prefix, last, &format!("let there be {}: {}", name, type_str(ty)));
+            Tree::new(format!("let there be {}: {}", name, type_str(ty)))
         }
         Stmt::DeclVal { name, ty, val } => {
-            leaf(prefix, last, &format!("let there {}: {} =", name, type_str(ty)));
-            let cp = child_prefix(prefix, last);
-            print_expr(val, &cp, true);
+            let mut tree = Tree::new(format!("let there {}: {} =", name, type_str(ty)));
+            tree.push(build_expr_tree(val));
+            tree
         }
         Stmt::Assign { name, val } => {
-            leaf(prefix, last, &format!("{} become", name));
-            let cp = child_prefix(prefix, last);
-            print_expr(val, &cp, true);
+            let mut tree = Tree::new(format!("{} become", name));
+            tree.push(build_expr_tree(val));
+            tree
         }
         Stmt::FnCallStmt { name, args } => {
-            leaf(prefix, last, &format!("hail {} ({})", name, args.len()));
-            let cp = child_prefix(prefix, last);
-            children(args, &cp, |a, p, l| print_expr(a, p, l));
+            let mut tree = Tree::new(format!("hail {} ({})", name, args.len()));
+            for arg in args {
+                tree.push(build_expr_tree(arg));
+            }
+            tree
         }
         Stmt::MethodCallStmt { method, target, args } => {
-            leaf(prefix, last, &format!("hail {} upon {} ({})", method, target, args.len()));
-            if !args.is_empty() {
-                let cp = child_prefix(prefix, last);
-                children(args, &cp, |a, p, l| print_expr(a, p, l));
+            let mut tree = Tree::new(format!("hail {} upon {} ({})", method, target, args.len()));
+            for arg in args {
+                tree.push(build_expr_tree(arg));
             }
+            tree
         }
         Stmt::Reveal(expr) => {
-            leaf(prefix, last, "reveal");
-            let cp = child_prefix(prefix, last);
-            print_expr(expr, &cp, true);
+            let mut tree = Tree::new("reveal".into());
+            tree.push(build_expr_tree(expr));
+            tree
         }
         Stmt::Conditional { branches, otherwise } => {
-            leaf(prefix, last, &format!(
+            let mut tree = Tree::new(format!(
                 "whether ({} branch{}{})",
                 branches.len(),
                 if branches.len() != 1 { "es" } else { "" },
                 if otherwise.is_some() { " + otherwise" } else { "" }
             ));
-            let cp = child_prefix(prefix, last);
-            let total = branches.len() + usize::from(otherwise.is_some());
-            for (i, (cond, body)) in branches.iter().enumerate() {
-                let tag = if i == 0 { "cond" } else { "otherwise so" };
-                let bl = i + 1 == total && otherwise.is_none();
-                leaf(&cp, bl, tag);
-                let cp2 = child_prefix(&cp, bl);
-                print_expr(cond, &cp2, false);
-                leaf(&cp2, true, "then");
-                let cp3 = child_prefix(&cp2, true);
-                print_block(body, &cp3);
+
+            for (index, (cond, body)) in branches.iter().enumerate() {
+                let mut branch_tree = Tree::new(if index == 0 {
+                    "cond".into()
+                } else {
+                    "otherwise so".into()
+                });
+                branch_tree.push(build_expr_tree(cond));
+                let mut then_tree = Tree::new("then".into());
+                for stmt in body {
+                    then_tree.push(build_stmt_tree(stmt));
+                }
+                branch_tree.push(then_tree);
+                tree.push(branch_tree);
             }
-            if let Some(else_body) = otherwise {
-                leaf(&cp, true, "otherwise");
-                let cp2 = child_prefix(&cp, true);
-                print_block(else_body, &cp2);
+
+            if let Some(otherwise_body) = otherwise {
+                let mut otherwise_tree = Tree::new("otherwise".into());
+                for stmt in otherwise_body {
+                    otherwise_tree.push(build_stmt_tree(stmt));
+                }
+                tree.push(otherwise_tree);
             }
+
+            tree
         }
         Stmt::Litany { cond, body } => {
-            leaf(prefix, last, "litany for");
-            let cp = child_prefix(prefix, last);
-            leaf(&cp, false, "cond");
-            let cp2 = child_prefix(&cp, false);
-            print_expr(cond, &cp2, true);
-            leaf(&cp, true, "body");
-            let cp2 = child_prefix(&cp, true);
-            print_block(body, &cp2);
+            let mut tree = Tree::new("litany for".into());
+            let mut cond_tree = Tree::new("cond".into());
+            cond_tree.push(build_expr_tree(cond));
+            tree.push(cond_tree);
+
+            let mut body_tree = Tree::new("body".into());
+            for stmt in body {
+                body_tree.push(build_stmt_tree(stmt));
+            }
+            tree.push(body_tree);
+            tree
         }
         Stmt::Confess { try_block, handlers, absolve } => {
-            leaf(prefix, last, &format!(
+            let mut tree = Tree::new(format!(
                 "confess ({} handler{}{})",
                 handlers.len(),
                 if handlers.len() != 1 { "s" } else { "" },
                 if absolve.is_some() { " + absolve" } else { "" }
             ));
-            let cp = child_prefix(prefix, last);
-            let has_abs = absolve.is_some();
-            leaf(&cp, handlers.is_empty() && !has_abs, "try");
-            let cp2 = child_prefix(&cp, handlers.is_empty() && !has_abs);
-            print_block(try_block, &cp2);
 
-            for (i, h) in handlers.iter().enumerate() {
-                let hl = i + 1 == handlers.len() && !has_abs;
-                let label = match &h.binding {
-                    Some(b) => format!("answer for {} as {}", h.sin_type, b),
-                    None    => format!("answer for {}", h.sin_type),
+            let mut try_tree = Tree::new("try".into());
+            for stmt in try_block {
+                try_tree.push(build_stmt_tree(stmt));
+            }
+            tree.push(try_tree);
+
+            for handler in handlers {
+                let label = match &handler.binding {
+                    Some(binding) => format!("answer for {} as {}", handler.sin_type, binding),
+                    None => format!("answer for {}", handler.sin_type),
                 };
-                leaf(&cp, hl, &label);
-                let cp2 = child_prefix(&cp, hl);
-                print_block(&h.body, &cp2);
+                let mut handler_tree = Tree::new(label);
+                for stmt in &handler.body {
+                    handler_tree.push(build_stmt_tree(stmt));
+                }
+                tree.push(handler_tree);
             }
 
-            if let Some(abs) = absolve {
-                leaf(&cp, true, "absolve");
-                let cp2 = child_prefix(&cp, true);
-                print_block(abs, &cp2);
+            if let Some(absolve_block) = absolve {
+                let mut absolve_tree = Tree::new("absolve".into());
+                for stmt in absolve_block {
+                    absolve_tree.push(build_stmt_tree(stmt));
+                }
+                tree.push(absolve_tree);
             }
+
+            tree
         }
         Stmt::Discern { target, branches, otherwise } => {
-            leaf(prefix, last, &format!(
+            let mut tree = Tree::new(format!(
                 "discern {} ({} branch{}{})",
                 target,
                 branches.len(),
                 if branches.len() != 1 { "es" } else { "" },
                 if otherwise.is_some() { " + otherwise" } else { "" }
             ));
-            let cp = child_prefix(prefix, last);
-            let total = branches.len() + usize::from(otherwise.is_some());
-            for (i, (variant, body)) in branches.iter().enumerate() {
-                let bl = i + 1 == total && otherwise.is_none();
-                leaf(&cp, bl, &format!("as {}", variant));
-                let cp2 = child_prefix(&cp, bl);
-                print_block(body, &cp2);
+
+            for branch in branches {
+                let label = if branch.bindings.is_empty() {
+                    format!("as {}", branch.variant)
+                } else {
+                    format!("as {} bearing {}", branch.variant, branch.bindings.join(", "))
+                };
+                let mut branch_tree = Tree::new(label);
+                for stmt in &branch.body {
+                    branch_tree.push(build_stmt_tree(stmt));
+                }
+                tree.push(branch_tree);
             }
+
             if let Some(otherwise_body) = otherwise {
-                leaf(&cp, true, "otherwise");
-                let cp2 = child_prefix(&cp, true);
-                print_block(otherwise_body, &cp2);
+                let mut otherwise_tree = Tree::new("otherwise".into());
+                for stmt in otherwise_body {
+                    otherwise_tree.push(build_stmt_tree(stmt));
+                }
+                tree.push(otherwise_tree);
             }
+
+            tree
         }
         Stmt::Transgress { sin_type, args } => {
-            leaf(prefix, last, &format!("transgress {} ({})", sin_type, args.len()));
-            let cp = child_prefix(prefix, last);
-            children(args, &cp, |a, p, l| print_expr(a, p, l));
+            let mut tree = Tree::new(format!("transgress {} ({})", sin_type, args.len()));
+            for arg in args {
+                tree.push(build_expr_tree(arg));
+            }
+            tree
         }
-        Stmt::Forsake => { leaf(prefix, last, "forsake"); }
-        Stmt::Ascend  => { leaf(prefix, last, "ascend"); }
+        Stmt::Forsake => Tree::new("forsake".into()),
+        Stmt::Ascend => Tree::new("ascend".into()),
     }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// Expressions
-// ══════════════════════════════════════════════════════════════════
-
-fn print_expr(expr: &Expr, prefix: &str, last: bool) {
+fn build_expr_tree(expr: &Expr) -> Tree<String> {
     match expr {
         Expr::Lit(lit) => {
-            let s = match lit {
-                Literal::Int(n)   => format!("Int({})", n),
+            let label = match lit {
+                Literal::Int(n) => format!("Int({})", n),
                 Literal::Float(f) => format!("Float({})", f),
-                Literal::Str(s)   => format!("Str({:?})", s),
-                Literal::Bool(b)  => if *b { "blessed".into() } else { "forsaken".into() },
+                Literal::Str(s) => format!("Str({:?})", s),
+                Literal::Bool(true) => "blessed".into(),
+                Literal::Bool(false) => "forsaken".into(),
             };
-            leaf(prefix, last, &s);
+            Tree::new(label)
         }
-        Expr::Var(name) => {
-            leaf(prefix, last, &format!("Var({})", name));
-        }
+        Expr::Var(name) => Tree::new(format!("Var({})", name)),
         Expr::Negate(expr) => {
-            leaf(prefix, last, "Negate");
-            let cp = child_prefix(prefix, last);
-            print_expr(expr, &cp, true);
+            let mut tree = Tree::new("Negate".into());
+            tree.push(build_expr_tree(expr));
+            tree
         }
         Expr::BinOp { op, left, right } => {
             let op_str = match op {
@@ -307,40 +273,68 @@ fn print_expr(expr: &Expr, prefix: &str, last: bool) {
                 BinOp::Mul => "times",
                 BinOp::Div => "over",
                 BinOp::Rem => "remainder",
-                BinOp::Eq  => "is",
-                BinOp::Ne  => "is not",
-                BinOp::Gt  => "greater than",
-                BinOp::Lt  => "lesser than",
-                BinOp::Ge  => "no lesser than",
-                BinOp::Le  => "no greater than",
+                BinOp::Eq => "is",
+                BinOp::Ne => "is not",
+                BinOp::Gt => "greater than",
+                BinOp::Lt => "lesser than",
+                BinOp::Ge => "no lesser than",
+                BinOp::Le => "no greater than",
             };
-            leaf(prefix, last, &format!("BinOp({})", op_str));
-            let cp = child_prefix(prefix, last);
-            print_expr(left, &cp, false);
-            print_expr(right, &cp, true);
+            let mut tree = Tree::new(format!("BinOp({})", op_str));
+            tree.push(build_expr_tree(left));
+            tree.push(build_expr_tree(right));
+            tree
         }
         Expr::FnCall { name, args } => {
-            leaf(prefix, last, &format!("hail {} ({})", name, args.len()));
-            let cp = child_prefix(prefix, last);
-            children(args, &cp, |a, p, l| print_expr(a, p, l));
+            let mut tree = Tree::new(format!("hail {} ({})", name, args.len()));
+            for arg in args {
+                tree.push(build_expr_tree(arg));
+            }
+            tree
         }
         Expr::MethodCall { method, target, args } => {
-            leaf(prefix, last, &format!("hail {} upon {} ({})", method, target, args.len()));
-            if !args.is_empty() {
-                let cp = child_prefix(prefix, last);
-                children(args, &cp, |a, p, l| print_expr(a, p, l));
+            let mut tree = Tree::new(format!("hail {} upon {} ({})", method, target, args.len()));
+            for arg in args {
+                tree.push(build_expr_tree(arg));
             }
+            tree
         }
         Expr::Manifest { scripture, args } => {
-            leaf(prefix, last, &format!("manifest {} ({})", scripture, args.len()));
-            let cp = child_prefix(prefix, last);
-            children(args, &cp, |a, p, l| print_expr(a, p, l));
+            let mut tree = Tree::new(format!("manifest {} ({})", scripture, args.len()));
+            for arg in args {
+                tree.push(build_expr_tree(arg));
+            }
+            tree
         }
         Expr::FieldAccess { field, object } => {
-            leaf(prefix, last, &format!("FieldAccess({} from {})", field, object));
+            let mut tree = Tree::new(format!("FieldAccess({})", field));
+            tree.push(build_expr_tree(object));
+            tree
         }
         Expr::SelfFieldAccess { field } => {
-            leaf(prefix, last, &format!("FieldAccess({} from its)", field));
+            Tree::new(format!("FieldAccess({} from its)", field))
         }
     }
+}
+
+fn type_str(ty: &HolyType) -> String {
+    match ty {
+        HolyType::Atom => "atom".into(),
+        HolyType::Fractional => "fractional".into(),
+        HolyType::Word => "word".into(),
+        HolyType::Dogma => "dogma".into(),
+        HolyType::Void => "void".into(),
+        HolyType::Custom(name) => name.clone(),
+    }
+}
+
+fn params_str(params: &[(String, HolyType)]) -> String {
+    if params.is_empty() {
+        return "-".into();
+    }
+
+    params.iter()
+        .map(|(name, ty)| format!("{}: {}", name, type_str(ty)))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
