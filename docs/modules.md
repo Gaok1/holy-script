@@ -19,6 +19,7 @@ Imports all public symbols (scriptures, covenants, salms, sins) from the `MathUt
 ```holy
 testament Collections revealing Stack, Queue
 testament MathUtils revealing add, multiply
+testament Pairs revealing left, right and swap
 ```
 
 Only the listed symbols are imported. All other symbols in that module remain inaccessible.
@@ -46,7 +47,7 @@ testament ModuleName revealing Symbol1, Symbol2, Symbol3
 
 - `ModuleName` is an identifier.
 - `revealing` is optional.
-- The symbol list after `revealing` is comma-separated.
+- The symbol list after `revealing` is comma-separated, and the final separator may be `and`.
 
 ---
 

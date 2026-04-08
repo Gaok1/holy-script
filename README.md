@@ -5,6 +5,8 @@ An interpreted, strongly typed programming language with archaic/biblical syntax
 
 Types are declared explicitly and enforced at runtime. Variables, scripture fields, salm parameters, and return values must match their declared types.
 
+Across Holy's list syntax, the final separator may be written as `and`: `a and b`, `a, b and c`, `Pair of atom and word`, `receiving x of atom and y of atom`.
+
 ```holy
 scripture Person
     name of word
@@ -68,7 +70,7 @@ Every program has three sections in order:
 ```holy
 -- 1. module imports (optional)
 testament MathUtils
-testament Collections revealing Stack, Queue
+testament Collections revealing Stack and Queue
 
 -- 2. top-level declarations (in any order)
 scripture Point
@@ -81,11 +83,11 @@ covenant Direction
     North
     South
 
-salm add receiving a of atom, b of atom reveals atom
+salm add receiving a of atom and b of atom reveals atom
     reveal a plus b
 
 -- 3. top-level statements
-let there p of Point be manifest Point praying 3, 4
+let there p of Point be manifest Point praying 3 and 4
 
 amen       -- required: marks the end of the program
 ```

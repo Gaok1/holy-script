@@ -28,10 +28,11 @@ sin NotFound
 ```holy
 transgress Failure praying "something went wrong"
 transgress OutOfBounds praying index, max
+transgress OutOfBounds praying index and max
 transgress NotFound
 ```
 
-Arguments are in field declaration order. `praying` is omitted if the sin has no fields.
+Arguments are in field declaration order. As with other Holy lists, the final separator may be `and`. `praying` is omitted if the sin has no fields.
 
 `transgress` immediately halts execution of the current block and propagates up the call stack until caught or the program terminates.
 
@@ -74,7 +75,7 @@ sin ParseError
     column  of atom
 
 confess
-    transgress ParseError praying "abc", 3
+    transgress ParseError praying "abc" and 3
 answer for ParseError as e
     hail proclaim praying "bad input: " plus input from e
     hail proclaim praying "at column: " plus hail word_of praying column from e

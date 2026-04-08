@@ -2,6 +2,8 @@
 
 Holy uses a word-based syntax, so nesting can become ambiguous when an inner type, call, or grouped expression is followed by tokens that belong to the outer context.
 
+In Holy lists, the final separator may be written as `and`: `a and b`, `a, b and c`, `Pair of atom and word`.
+
 The two tools for disambiguation are:
 
 - `thus`: closes one open inner context
@@ -17,7 +19,7 @@ This page focuses on one question:
 
 Use `thus` when:
 
-- an inner generic type is followed by a comma that belongs to an outer type
+- an inner generic type is followed by a separator that belongs to an outer type
 - an inner `hail` or `manifest` call is followed by `,` or `and` that belongs to an outer call
 - an `after` group must end before the outer expression continues
 
@@ -71,7 +73,7 @@ Without `after … thus`, the parser would not treat `10 minus 3` as one protect
 
 ## 2. Disambiguating nested calls
 
-When a `hail` call appears inside another `hail` call, the parser must know where the inner argument list ends.
+When a `hail` call appears inside another `hail` call, the parser must know where the inner argument list ends. This happens whether the outer separator is `,` or `and`.
 
 ### No ambiguity: inner call is the last outer argument
 
@@ -174,7 +176,7 @@ Box(Point(1, 2), 99)
 
 ## 4. Disambiguating nested generic types
 
-Generic types use `of`. Ambiguity appears when an inner generic type is followed by a comma that belongs to an outer type.
+Generic types use `of`. Ambiguity appears when an inner generic type is followed by a separator that belongs to an outer type.
 
 ### No ambiguity
 
@@ -196,7 +198,7 @@ After reading `Stack of atom`, the parser can continue greedily and treat `word`
 To close the inner generic type, use `thus`:
 
 ```holy
-verdict of Stack of atom thus, word
+verdict of Stack of atom thus and word
 ```
 
 This is read as:
@@ -217,7 +219,7 @@ This is read as:
 Pair<grace<atom>, word>
 ```
 
-Again, `thus` closes the inner generic `grace of atom` before the outer comma.
+Again, `thus` closes the inner generic `grace of atom` before the outer separator.
 
 ---
 
@@ -228,21 +230,21 @@ This is not only for values. The same disambiguation rule applies anywhere a typ
 ### Parameter types
 
 ```holy
-salm show receiving value of verdict of Stack of atom thus, word reveals word
+salm show receiving value of verdict of Stack of atom thus and word reveals word
     reveal hail word_of praying value
 ```
 
 Here, `thus` tells the parser:
 
 - `Stack of atom` is complete
-- the comma belongs to `verdict`
+- the outer separator belongs to `verdict`
 - it does not belong to the outer parameter list
 
 ### Return types
 
 ```holy
-salm load reveals verdict of grace of atom thus, word
-    reveal manifest condemned of verdict of grace of atom thus, word praying "not implemented"
+salm load reveals verdict of grace of atom thus and word
+    reveal manifest condemned of verdict of grace of atom thus and word praying "not implemented"
 ```
 
 Here the return type is:
@@ -258,12 +260,12 @@ verdict<grace<atom>, word>
 This is the case that usually needs the most care.
 
 ```holy
-let there answer of verdict of Stack of atom thus, word be hail build praying hail choose praying 1 thus and 2
+let there answer of verdict of Stack of atom thus and word be hail build praying hail choose praying 1 thus and 2
 ```
 
 This line uses two different disambiguations:
 
-- `thus` in `Stack of atom thus, word` closes the inner generic type before the outer comma of `verdict`
+- `thus` in `Stack of atom thus and word` closes the inner generic type before the outer separator of `verdict`
 - `thus` in `hail choose praying 1 thus and 2` closes the inner call before the outer `and 2`
 
 They solve different ambiguities in the same line.
@@ -311,7 +313,7 @@ Correct:
 hail add praying hail double praying 3 thus and 2
 ```
 
-### Nested generic before an outer comma
+### Nested generic before an outer separator
 
 Wrong:
 
@@ -322,7 +324,7 @@ verdict of Stack of atom, word
 Correct:
 
 ```holy
-verdict of Stack of atom thus, word
+verdict of Stack of atom thus and word
 ```
 
 ### Grouping inside a larger expression

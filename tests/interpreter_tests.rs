@@ -182,6 +182,17 @@ amen
 }
 
 #[test]
+fn salm_params_and_args_accept_final_and() {
+    let i = run(r#"salm add receiving a of atom and b of atom reveals atom
+    reveal a plus b
+
+let there r of atom be hail add praying 10 and 32
+amen
+"#);
+    assert_eq!(get_int(&i, "r"), 42);
+}
+
+#[test]
 fn method_salm_accesses_its() {
     let i = run(r#"scripture Box
     value of atom
@@ -224,6 +235,23 @@ answer for Boom as e
 amen
 "#);
     assert_eq!(get_str(&i, "caught"), "fire!");
+}
+
+#[test]
+fn transgress_accepts_final_and() {
+    let i = run(r#"sin PairErr
+    left of word
+    right of word
+
+let there caught of word be ""
+
+confess
+    transgress PairErr praying "alpha" and "beta"
+answer for PairErr as e
+    caught become left from e plus ":" plus right from e
+amen
+"#);
+    assert_eq!(get_str(&i, "caught"), "alpha:beta");
 }
 
 #[test]
@@ -431,6 +459,19 @@ discern r
 amen
 "#);
     assert_eq!(get_int(&i, "out"), 42);
+}
+
+#[test]
+fn generic_types_accept_final_and() {
+    let i = run(r#"scripture Pair of A and B
+    first of A
+    second of B
+
+let there p of Pair of atom and word be manifest Pair praying 7 and "ok"
+let there out of word be second from p
+amen
+"#);
+    assert_eq!(get_str(&i, "out"), "ok");
 }
 
 #[test]

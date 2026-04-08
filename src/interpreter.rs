@@ -454,10 +454,6 @@ impl Interpreter {
                 (self.scriptures.contains_key(name) || self.covenants.contains_key(name))
                     && args.iter().all(|a| self.is_concrete_type(a))
             }
-            HolyType::Grace(inner) => self.is_concrete_type(inner),
-            HolyType::Verdict(ok, err) => {
-                self.is_concrete_type(ok) && self.is_concrete_type(err)
-            }
             _ => true, // Atom, Fractional, Word, Dogma, Void are always concrete
         }
     }
@@ -469,10 +465,6 @@ impl Interpreter {
         match ty {
             HolyType::Custom(name) => type_params.contains(name),
             HolyType::Generic(_, args) => args.iter().any(|a| self.is_abstract_type(a, type_params)),
-            HolyType::Grace(inner) => self.is_abstract_type(inner, type_params),
-            HolyType::Verdict(ok, err) => {
-                self.is_abstract_type(ok, type_params) || self.is_abstract_type(err, type_params)
-            }
             _ => false,
         }
     }
@@ -776,11 +768,6 @@ impl Interpreter {
                 }
                 Ok(())
             }
-            HolyType::Grace(inner) => self.ensure_type_exists_lenient(inner),
-            HolyType::Verdict(ok_ty, err_ty) => {
-                self.ensure_type_exists_lenient(ok_ty)?;
-                self.ensure_type_exists_lenient(err_ty)
-            }
             _ => Ok(()),
         }
     }
@@ -797,13 +784,6 @@ impl Interpreter {
                 for arg in args {
                     self.ensure_type_exists_with_params(arg, type_params)?;
                 }
-            }
-            HolyType::Grace(inner) => {
-                self.ensure_type_exists_with_params(inner, type_params)?;
-            }
-            HolyType::Verdict(ok_ty, err_ty) => {
-                self.ensure_type_exists_with_params(ok_ty, type_params)?;
-                self.ensure_type_exists_with_params(err_ty, type_params)?;
             }
             _ => {}
         }
@@ -836,35 +816,31 @@ impl Interpreter {
             HolyType::Word        => matches!(value, Value::Str(_)),
             HolyType::Dogma       => matches!(value, Value::Bool(_)),
             HolyType::Void        => matches!(value, Value::Void),
-            HolyType::Grace(inner) => match value {
-                Value::CovenantVariant { covenant, variant, fields } if covenant == "grace" => {
-                    match variant.as_str() {
-                        "granted" => fields.len() == 1 && self.value_matches_type(inner, &fields[0]),
-                        "absent"  => fields.is_empty(),
-                        _ => false,
-                    }
-                }
-                _ => false,
-            },
-            HolyType::Verdict(ok_ty, err_ty) => match value {
-                Value::CovenantVariant { covenant, variant, fields } if covenant == "verdict" => {
-                    match variant.as_str() {
-                        "righteous" => fields.len() == 1 && self.value_matches_type(ok_ty, &fields[0]),
-                        "condemned" => fields.len() == 1 && self.value_matches_type(err_ty, &fields[0]),
-                        _ => false,
-                    }
-                }
-                _ => false,
-            },
             HolyType::Custom(name) => match value {
                 Value::Scripture { type_name, .. }    => type_name == name,
                 Value::CovenantVariant { covenant, .. } => covenant == name,
                 _ => false,
             },
-            HolyType::Generic(name, _) => match value {
-                Value::Scripture { type_name, .. }    => type_name == name,
-                Value::CovenantVariant { covenant, .. } => covenant == name,
-                _ => false,
+            HolyType::Generic(name, args) => match (name.as_str(), value) {
+                ("grace", Value::CovenantVariant { covenant, variant, fields }) if covenant == "grace" => {
+                    match (args.first(), variant.as_str()) {
+                        (Some(inner), "granted") => fields.len() == 1 && self.value_matches_type(inner, &fields[0]),
+                        (_, "absent") => fields.is_empty(),
+                        _ => false,
+                    }
+                }
+                ("verdict", Value::CovenantVariant { covenant, variant, fields }) if covenant == "verdict" => {
+                    match (args.first(), args.get(1), variant.as_str()) {
+                        (Some(ok_ty), _, "righteous") => fields.len() == 1 && self.value_matches_type(ok_ty, &fields[0]),
+                        (_, Some(err_ty), "condemned") => fields.len() == 1 && self.value_matches_type(err_ty, &fields[0]),
+                        _ => false,
+                    }
+                }
+                _ => match value {
+                    Value::Scripture { type_name, .. }    => type_name == name,
+                    Value::CovenantVariant { covenant, .. } => covenant == name,
+                    _ => false,
+                },
             },
         }
     }
@@ -888,8 +864,6 @@ impl Interpreter {
             HolyType::Word          => "word".into(),
             HolyType::Dogma         => "dogma".into(),
             HolyType::Void          => "void".into(),
-            HolyType::Grace(inner)  => format!("grace of {}", self.describe_type(inner)),
-            HolyType::Verdict(ok, err) => format!("verdict of {}, {}", self.describe_type(ok), self.describe_type(err)),
             HolyType::Custom(name)  => name.clone(),
             HolyType::Generic(name, args) => {
                 let args_str = args.iter().map(|a| self.describe_type(a)).collect::<Vec<_>>().join(", ");

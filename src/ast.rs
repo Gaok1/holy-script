@@ -6,10 +6,6 @@ pub enum HolyType {
     Word,           // String
     Dogma,          // bool: blessed (true) | forsaken (false)
     Void,
-    /// `grace of T`  — built-in Option: granted(T) | absent
-    Grace(Box<HolyType>),
-    /// `verdict of T, E`  — built-in Result: righteous(T) | condemned(E)
-    Verdict(Box<HolyType>, Box<HolyType>),
     Custom(String),                    // user-defined, no type args
     Generic(String, Vec<HolyType>),    // user-defined with type args: e.g. Pair of atom, word
 }

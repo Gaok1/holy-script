@@ -17,7 +17,7 @@ top_decl    ::= salm
 -- with "revealing": imports only the listed symbols (scriptures, salms, covenants, etc.)
 testament   ::= "testament" ident ("revealing" reveal_list)?
 
-reveal_list ::= ident ("," ident)*
+reveal_list ::= ident ("," ident)* ("and" ident)?
 
 
 -- SCRIPTURES (struct definition — pure data, no behaviour)
@@ -40,7 +40,7 @@ covenant    ::= "covenant" ident ("of" type_param_list)? INDENT variant+ DEDENT
 variant     ::= ident (INDENT field+ DEDENT)?
 
 -- one or more type parameter names (abstract — resolved at instantiation)
-type_param_list ::= ident ("," ident)*
+type_param_list ::= ident ("," ident)* ("and" ident)?
 
 
 -- SALMS (regular function definition)
@@ -51,7 +51,7 @@ salm        ::= "salm" ident ("of" type_param_list)? ("receiving" param_list)? "
 -- "upon" signals binding — "its" is available inside the body as a reference to the instance
 method_salm ::= "salm" ident "upon" ident ("of" type_param_list)? ("receiving" param_list)? "reveals" type block
 
-param_list  ::= param ("," param)*
+param_list  ::= param ("," param)* ("and" param)?
 param       ::= ident "of" type
 
 -- block delimited by indentation (INDENT/DEDENT emitted by the lexer)
@@ -119,7 +119,7 @@ sin_handler ::= "confess" block
 -- "bearing" binds the variant's fields positionally to local names
 -- "otherwise" is the default case — optional if all variants are covered
 discern     ::= "discern" ident INDENT
-                ("as" ident ("bearing" ident ("," ident)*)? block)+
+                ("as" ident ("bearing" ident ("," ident)* ("and" ident)?)? block)+
                 ("otherwise" block)?
                 DEDENT
 
@@ -162,7 +162,7 @@ cmp_op      ::= "is"
             |   "no greater than"
             |   "no lesser than"
 
--- the final argument may use "and" instead of a comma
+-- comma-separated list with optional final "and"
 -- "thus" after the last arg closes this call and returns to the enclosing arg_list
 arg_list    ::= expr ("," expr)* ("and" expr)?
 
@@ -170,18 +170,19 @@ arg_list    ::= expr ("," expr)* ("and" expr)?
 -- TYPES
 -- "thus" closes a generic type arg when the next token would be ambiguous
 -- example: Stack of Node of T thus   →   Stack<Node<T>>
--- example: verdict of Stack of T thus, word  →  verdict<Stack<T>, word>
+-- example: verdict of Stack of T thus and word  →  verdict<Stack<T>, word>
 type        ::= "atom"                                -- int (i64)
             |   "fractional"                          -- float (f64)
             |   "word"                                -- string
             |   "dogma"                               -- bool (blessed | forsaken)
             |   "void"
             |   "grace" "of" type                    -- built-in Option: granted | absent
-            |   "verdict" "of" type "," type         -- built-in Result: righteous | condemned
+            |   "verdict" "of" type ("," | "and") type -- built-in Result: righteous | condemned
             |   ident ("of" type_arg_list)?           -- user-defined scripture or covenant, optionally generic
 
--- comma-separated concrete type arguments, each closed by "thus" when nested
-type_arg_list ::= type_arg ("," type_arg)*
+-- comma-separated concrete type arguments, with optional final "and"
+-- each nested type arg may still use "thus" for disambiguation
+type_arg_list ::= type_arg ("," type_arg)* ("and" type_arg)?
 type_arg      ::= type "thus"?
                 -- "thus" is required when the type is itself generic and the
                 -- next token would otherwise be consumed as another type arg

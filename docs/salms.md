@@ -17,7 +17,7 @@ salm greet reveals void
 - `receiving param_list` is optional (omit if no parameters).
 - `reveals type` is required; use `void` when the salm produces no value.
 - The body is an indented block with at least one statement.
-- Parameters are separated by `,`.
+- Lists in Holy may use `and` for the final separator: `a and b`, `a, b and c`.
 
 ---
 
@@ -29,6 +29,13 @@ salm describe receiving name of word, age of atom, active of dogma reveals word
 ```
 
 There is no variadic syntax. Each parameter has an explicit name and type.
+
+The final parameter separator may also be `and`:
+
+```holy
+salm describe receiving name of word, age of atom and active of dogma reveals word
+    reveal name
+```
 
 ---
 
@@ -56,7 +63,7 @@ hail greet
 -- with arguments
 let there sum of atom be hail add praying 3, 5
 
--- last argument may use 'and' instead of ','
+-- final separator may use 'and' instead of ','
 let there sum of atom be hail add praying 3 and 5
 ```
 

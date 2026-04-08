@@ -6,14 +6,14 @@ Holy Lang supports type parameters on scriptures, covenants, and salms. Everythi
 
 ## Declaring type parameters
 
-Use `of` followed by a comma-separated list of type parameter names after the declaration name.
+Use `of` followed by a comma-separated list of type parameter names after the declaration name. The final separator may also be `and`.
 
 ```holy
 -- generic scripture
 scripture Box of T
     value of T
 
-scripture Pair of A, B
+scripture Pair of A and B
     first  of A
     second of B
 
@@ -37,12 +37,12 @@ Type parameter names are conventional identifiers (single capital letters by con
 
 ## Passing type arguments
 
-At every call or instantiation site, type args are supplied explicitly with `of`:
+At every call or instantiation site, type args are supplied explicitly with `of`. The final separator may also be `and`:
 
 ```holy
 -- scripture instantiation
 let there b of Box of atom be manifest Box praying 42
-let there p of Pair of atom, word be manifest Pair praying 1 and "x"
+let there p of Pair of atom and word be manifest Pair praying 1 and "x"
 
 -- salm call
 let there x of atom be hail identity of atom praying 99
@@ -76,22 +76,22 @@ The parser greedily consumes every `,` that follows a type, treating it as anoth
 ### The solution — `thus`
 
 ```holy
--- CORRECT: thus closes Stack<T>, then ", word" goes to verdict
-verdict of Stack of T thus, word
+-- CORRECT: thus closes Stack<T>, then "and word" goes to verdict
+verdict of Stack of T thus and word
 
 -- CORRECT: thus closes Stack<atom>
-verdict of Stack of atom thus, word
+verdict of Stack of atom thus and word
 ```
 
 ### Simple types never need `thus`
 
 ```holy
-verdict of atom, word        -- ok: atom has no type args, no ambiguity
+verdict of atom and word     -- ok: atom has no type args, no ambiguity
 grace of word                -- ok
 verdict of T, E              -- ok: T and E are simple names with no "of"
 ```
 
-`thus` is only needed when the type argument is itself generic **and** is followed by a `,` that belongs to the outer context.
+`thus` is only needed when the type argument is itself generic **and** is followed by a separator that belongs to the outer context.
 
 ---
 
@@ -103,15 +103,15 @@ In any position where a type is written — `let there`, `salm reveals`, `receiv
 
 ```holy
 -- return type
-salm pop of T receiving s of Stack of T reveals verdict of Stack of T thus, word
+salm pop of T receiving s of Stack of T reveals verdict of Stack of T thus and word
     ...
 
--- parameter type: "s of Stack<T>" then ", val of T" is next param
-salm push of T receiving s of Stack of T thus, val of T reveals Stack of T
+-- parameter type: "s of Stack<T>" then "and val of T" is the next param
+salm push of T receiving s of Stack of T thus and val of T reveals Stack of T
     ...
 
 -- variable declaration
-let there result of verdict of Stack of atom thus, word be hail pop of atom praying s
+let there result of verdict of Stack of atom thus and word be hail pop of atom praying s
 ```
 
 ### 2. Variant instantiation
@@ -120,11 +120,11 @@ When the type argument list of a covenant/variant is itself generic:
 
 ```holy
 -- righteous carries Stack<T>, E is word
-manifest righteous of verdict of Stack of T thus, word praying newStack
+manifest righteous of verdict of Stack of T thus and word praying newStack
 
 -- granted carries grace<StackNode<T>>
 manifest granted of grace of StackNode of T praying node
--- (no thus needed here: StackNode<T> is the only type arg of grace, no following comma)
+-- (no thus needed here: StackNode<T> is the only type arg of grace, no following outer separator)
 ```
 
 ### 3. Nested `hail` / `manifest` argument lists
@@ -205,22 +205,22 @@ scripture StackNode of T
 salm emptyStack of T reveals Stack of T
     reveal manifest Stack praying absent of grace of StackNode of T and 0
 
-salm push of T receiving s of Stack of T thus, val of T reveals Stack of T
+salm push of T receiving s of Stack of T thus and val of T reveals Stack of T
     let there node of StackNode of T be manifest StackNode praying val and top from s
     reveal manifest Stack praying manifest granted of grace of StackNode of T praying node thus and size from s plus 1
 
-salm peek of T receiving s of Stack of T reveals verdict of T, word
+salm peek of T receiving s of Stack of T reveals verdict of T and word
     discern top from s
         as granted bearing node
-            reveal manifest righteous of verdict of T, word praying value from node
+            reveal manifest righteous of verdict of T and word praying value from node
         as absent
-            reveal manifest condemned of verdict of T, word praying "stack is empty"
+            reveal manifest condemned of verdict of T and word praying "stack is empty"
 
 let there s of Stack of atom be hail emptyStack of atom
 s become hail push of atom praying s and 10
 s become hail push of atom praying s and 20
 
-let there peeked of verdict of atom, word be hail peek of atom praying s
+let there peeked of verdict of atom and word be hail peek of atom praying s
 discern peeked
     as righteous bearing value
         hail proclaim praying hail word_of praying value   -- 20

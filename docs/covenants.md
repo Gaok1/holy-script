@@ -49,9 +49,10 @@ Use `manifest` to supply field values:
 ```holy
 let there s of Shape be manifest Circle of Shape praying 5.0
 let there r of Shape be manifest Rectangle of Shape praying 3.0, 4.0
+let there q of Shape be manifest Rectangle of Shape praying 3.0 and 4.0
 ```
 
-Arguments are in **field declaration order**.
+Arguments are in **field declaration order**. As with other Holy lists, the final separator may be `and`.
 
 ---
 
@@ -71,13 +72,13 @@ discern d
 
 ### Binding fields — `bearing`
 
-Add `bearing name1, name2, …` after the variant name to bind its fields positionally to local variables:
+Add `bearing name1, name2, …` after the variant name to bind its fields positionally to local variables. The final separator may also be `and`:
 
 ```holy
 discern s
     as Circle bearing r
         hail proclaim praying "circle, radius " plus hail word_of praying r
-    as Rectangle bearing w, h
+    as Rectangle bearing w and h
         let there area of fractional be w times h
         hail proclaim praying "rectangle, area " plus hail word_of praying area
     as Point
@@ -100,18 +101,19 @@ covenant Option of T
         value of T
     None
 
-covenant Either of L, R
+covenant Either of L and R
     Left
         val of L
     Right
         val of R
 ```
 
-When instantiating, supply type args explicitly:
+When instantiating, supply type args explicitly. The final type separator may be `and`:
 
 ```holy
 let there o of Option of atom be manifest Some of Option of atom praying 42
 let there n of Option of atom be None of Option of atom
+let there e of Either of atom and word be manifest Left of Either of atom and word praying 7
 ```
 
 See [Generics](generics.md) for generic-type rules and [Disambiguation with `thus` and `after`](nesting.md) for the general ambiguity model.
@@ -155,7 +157,7 @@ discern g
 
 ---
 
-### `verdict of T, E` — fallible result
+### `verdict of T and E` — fallible result
 
 Equivalent to `Result` in other languages.
 
@@ -166,8 +168,8 @@ Equivalent to `Result` in other languages.
 
 ```holy
 -- creating
-let there r of verdict of atom, word be manifest righteous of verdict of atom, word praying 99
-let there e of verdict of atom, word be manifest condemned of verdict of atom, word praying "bad input"
+let there r of verdict of atom and word be manifest righteous of verdict of atom and word praying 99
+let there e of verdict of atom and word be manifest condemned of verdict of atom and word praying "bad input"
 ```
 
 ```holy
@@ -181,11 +183,11 @@ discern r
 
 #### Nested generic types
 
-When `T` or `E` is itself generic, use `thus` to close the inner type before the separating comma:
+When `T` or `E` is itself generic, use `thus` to close the inner type before the outer separator:
 
 ```holy
 -- verdict<Stack<atom>, word>
-let there result of verdict of Stack of atom thus, word be hail pop of atom praying s
+let there result of verdict of Stack of atom thus and word be hail pop of atom praying s
 
 discern result
     as righteous bearing newStack

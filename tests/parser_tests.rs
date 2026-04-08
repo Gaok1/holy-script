@@ -135,9 +135,63 @@ fn parses_sin_and_confess() {
 // ── Parâmetros ───────────────────────────────────────────────────
 
 #[test]
-fn param_list_no_longer_accepts_and() {
-    // "and" como separador de param_list foi removido da gramática
-    let msg = parse_err("salm f receiving x of atom and y of atom reveals void\n    reveal 0\namen\n");
+fn param_list_accepts_final_and() {
+    let p = parse("salm f receiving x of atom and y of atom reveals void\n    reveal x\namen\n");
+    assert!(matches!(
+        p.top_decls.first(),
+        Some(TopDecl::Salm { params, .. }) if params.len() == 2
+    ));
+}
+
+#[test]
+fn revealing_list_accepts_final_and() {
+    let p = parse("testament Math revealing add and sub\namen\n");
+    assert!(matches!(
+        p.testaments.first(),
+        Some(Testament { revealing: Some(items), .. }) if items == &vec!["add".to_string(), "sub".to_string()]
+    ));
+}
+
+#[test]
+fn bearing_list_accepts_final_and() {
+    let p = parse(
+        "covenant Pair\n    Both\n\
+         discern value\n    as Both bearing left and right\n        hail proclaim\namen\n",
+    );
+    assert!(matches!(
+        p.stmts.first(),
+        Some(Stmt::Discern { branches, .. }) if branches[0].bindings == vec!["left".to_string(), "right".to_string()]
+    ));
+}
+
+#[test]
+fn type_param_list_accepts_final_and() {
+    let p = parse("scripture Pair of A and B\n    first of A\n    second of B\namen\n");
+    assert!(matches!(
+        p.top_decls.first(),
+        Some(TopDecl::Scripture { type_params, .. }) if type_params == &vec!["A".to_string(), "B".to_string()]
+    ));
+}
+
+#[test]
+fn type_arg_list_accepts_final_and() {
+    let p = parse("let there x of Pair of atom and word be v\namen\n");
+    assert!(matches!(
+        p.stmts.first(),
+        Some(Stmt::DeclVal { ty: HolyType::Generic(name, args), .. })
+            if name == "Pair" && args.len() == 2
+    ));
+}
+
+#[test]
+fn invalid_and_then_comma_in_arg_list_is_rejected() {
+    let msg = parse_err("hail add praying 1 and 2, 3\namen\n");
+    assert!(!msg.is_empty(), "expected parse error");
+}
+
+#[test]
+fn invalid_and_then_comma_in_type_args_is_rejected() {
+    let msg = parse_err("let there x of Pair of atom and word, dogma be v\namen\n");
     assert!(!msg.is_empty(), "expected parse error");
 }
 

@@ -30,7 +30,7 @@ let there u of Person be manifest Person praying "Gabriel", 30
 ```
 
 Arguments are passed **in field declaration order**, separated by `,`.  
-The last argument may use `and` instead of `,`:
+As with other Holy lists, the final separator may use `and` instead of `,`:
 
 ```holy
 let there p of Point be manifest Point praying 3 and 4
@@ -135,10 +135,10 @@ hail greetWith upon p praying "Hail"
 
 ## Generic scriptures
 
-Scriptures can declare type parameters with `of`:
+Scriptures can declare type parameters with `of`. The final type parameter separator may also be `and`:
 
 ```holy
-scripture Pair of A, B
+scripture Pair of A and B
     first  of A
     second of B
 
@@ -150,7 +150,7 @@ Type parameters are abstract names resolved at the call site. They appear in fie
 
 ```holy
 let there b of Box of atom be manifest Box praying 42
-let there p of Pair of atom, word be manifest Pair praying 1 and "x"
+let there p of Pair of atom and word be manifest Pair praying 1 and "x"
 ```
 
 When a generic type appears before a comma that separates other arguments or type args, use `thus` to close it first:

@@ -32,9 +32,9 @@ pub fn default_value(ty: &HolyType) -> Value {
         HolyType::Word            => Value::Str(String::new()),
         HolyType::Dogma           => Value::Bool(false),
         HolyType::Void            => Value::Void,
-        HolyType::Grace(_)        => default_grace(),
-        HolyType::Verdict(_, _)   => default_verdict(),
         HolyType::Custom(_)       => Value::Void,
+        HolyType::Generic(name, _) if name == "grace" => default_grace(),
+        HolyType::Generic(name, _) if name == "verdict" => default_verdict(),
         HolyType::Generic(_, _)   => Value::Void,
     }
 }

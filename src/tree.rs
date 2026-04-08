@@ -355,8 +355,6 @@ fn type_str(ty: &HolyType) -> String {
         HolyType::Word               => "word".into(),
         HolyType::Dogma              => "dogma".into(),
         HolyType::Void               => "void".into(),
-        HolyType::Grace(inner)       => format!("grace of {}", type_str(inner)),
-        HolyType::Verdict(ok, err)   => format!("verdict of {}, {}", type_str(ok), type_str(err)),
         HolyType::Custom(name)       => name.clone(),
         HolyType::Generic(name, args) => {
             let args_str = args.iter().map(type_str).collect::<Vec<_>>().join(", ");
