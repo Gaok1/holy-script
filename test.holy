@@ -1,43 +1,69 @@
 
 
-
--- scripture List
---     buff of legion of atom
-
--- salm new_list receiving val of atom reveals List
---     reveal manifest List praying  hail legion praying val
-
--- salm add upon List receiving val of atom reveals List
---     reveal manifest List praying hail concat upon buff from its praying hail legion of atom praying val
+scripture Point 
+    x of atom
+    y of atom 
 
 
--- salm destroy upon List reveals List 
---     reveal manifest List praying hail legion
+salm bresenham receiving s of Point and f of Point reveals legion of Point
+    let there raw_dx be x from f minus x from s
+    let there raw_dy be y from f minus y from s
 
+    let there be xIncr
+    let there be yIncr
 
--- let there list of List be hail new_list praying 2
+    let there points be hail legion of Point praying s
 
--- list become hail add upon list praying 20
+    whether raw_dx lesser than 0
+       xIncr become -1
+    otherwise 
+        xIncr become 1 
 
--- hail proclaim praying list
+    whether raw_dy lesser than 0
+        yIncr become -1
+    otherwise 
+        yIncr become 1
 
-
--- list become hail destroy upon list
-
-
-
-
-confess
-    let there var of atom be 2 over 2
-
-answer for DivisionByZero
-    hail proclaim praying "dividiu por zero"
-
-absolve
-    hail proclaim praying "sempre executa"
+    let there dx be hail abs praying raw_dx
+    let there dy be hail abs praying raw_dy
         
+    let there counter be 0
+    let there x be x from s
+    let there y be y from s
+
+    whether dx no lesser than dy
+        let there p be 2 times dy minus dx
+
+        litany for counter lesser than dx
+            x become x plus xIncr
+
+            whether p no lesser than 0
+                y become y plus yIncr
+                p become p plus 2 times after dy minus dx
+            otherwise 
+                p become p plus 2 times dy
+
+            points become hail push upon points praying manifest Point praying x and y
+            counter become counter plus 1
+    otherwise
+        let there p be 2 times dx minus dy
+
+        litany for counter lesser than dy
+            x become x plus xIncr
+
+            whether p greater than 0
+                y become y plus yIncr
+                p become p plus 2 times after dy minus dx
+            otherwise 
+                p become p plus 2 times dy
+            
+            points become hail push upon points praying manifest Point praying x and y
+
+            counter become counter plus 1
+    reveal points
+
+
+
+hail proclaim praying hail bresenham praying manifest Point praying -1 and 4 thus and manifest Point praying 5 and 7
+ 
 amen
-
-
-
-

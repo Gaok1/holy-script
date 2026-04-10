@@ -1,14 +1,14 @@
 # Covenants
 
-Um covenant é um **tipo soma** (tagged union): um valor do tipo covenant é sempre exatamente uma de suas variantes nomeadas. Pense como `enum` em Rust ou `sealed class` em Kotlin — mas com sintaxe bíblica.
+A covenant is a **sum type** (tagged union): a value of a covenant type is always exactly one of its named variants. Think of it like `enum` in Rust or `sealed class` in Kotlin — but with biblical syntax.
 
-Scriptures perguntam "o que esse valor **tem**?". Covenants perguntam "o que esse valor **é**?". A resposta é sempre uma de suas variantes.
+Scriptures ask "what does this value **have**?". Covenants ask "what **is** this value?". The answer is always one of its variants.
 
 ---
 
-## Declarando um covenant
+## Declaring a covenant
 
-Variantes podem ser **unitárias** (sem dados) ou **com dados** (campos indentados abaixo do nome):
+Variants can be **unit** (no data) or **data-carrying** (fields indented below the name):
 
 ```holy
 covenant Direction
@@ -25,26 +25,26 @@ covenant Shape
     Rectangle
         width  of fractional
         height of fractional
-    Point           -- variante unitária (sem campos)
+    Point           -- unit variant (no fields)
 ```
 
-- Pelo menos uma variante é obrigatória.
-- Uma variante com bloco indentado é uma **variante com dados**.
-- Uma variante sem bloco é uma **variante unitária**.
+- At least one variant is required.
+- A variant with an indented block is a **data-carrying variant**.
+- A variant without a block is a **unit variant**.
 
 ---
 
-## Criando um valor
+## Creating a value
 
-### Variante unitária
+### Unit variant
 
 ```holy
 let there d of Direction be North of Direction
 ```
 
-O sufixo `of CovenantName` é obrigatório — o interpreter precisa saber a qual covenant a variante pertence.
+The `of CovenantName` suffix is required — the interpreter needs to know which covenant the variant belongs to.
 
-### Variante com dados — `manifest`
+### Data-carrying variant — `manifest`
 
 ```holy
 let there s of Shape be manifest Circle    of Shape praying 5.0
@@ -52,52 +52,52 @@ let there r of Shape be manifest Rectangle of Shape praying 3.0, 4.0
 let there q of Shape be manifest Rectangle of Shape praying 3.0 and 4.0
 ```
 
-Os argumentos seguem a **ordem de declaração dos campos**. O último separador pode ser `and`.
+Arguments follow the **field declaration order**. The final separator may be `and`.
 
 ---
 
 ## Pattern matching — `discern`
 
-`discern` inspeciona o valor e executa o ramo correspondente à variante atual:
+`discern` inspects the value and executes the branch matching the current variant:
 
 ```holy
 discern d
     as North
-        hail proclaim praying "indo para cima"
+        hail proclaim praying "going up"
     as South
-        hail proclaim praying "indo para baixo"
+        hail proclaim praying "going down"
     otherwise
-        hail proclaim praying "indo de lado"
+        hail proclaim praying "going sideways"
 ```
 
-- Pelo menos um ramo `as` é obrigatório.
-- `otherwise` (opcional) captura qualquer variante não listada.
-- Se nenhum ramo combina e não há `otherwise`, um sin `InvalidDiscern` é lançado em runtime.
+- At least one `as` branch is required.
+- `otherwise` (optional) catches any variant not listed.
+- If no branch matches and there is no `otherwise`, an `InvalidDiscern` sin is thrown at runtime.
 
-### Ligando campos — `bearing`
+### Binding fields — `bearing`
 
-Use `bearing nome1, nome2, …` após o nome da variante para ligar seus campos a variáveis locais:
+Use `bearing name1, name2, …` after the variant name to bind its fields to local variables:
 
 ```holy
 discern s
     as Circle bearing r
-        hail proclaim praying "círculo, raio " plus hail word_of praying r
+        hail proclaim praying "circle, radius " plus hail word_of praying r
     as Rectangle bearing w and h
         let there area of fractional be w times h
-        hail proclaim praying "retângulo, área " plus hail word_of praying area
+        hail proclaim praying "rectangle, area " plus hail word_of praying area
     as Point
-        hail proclaim praying "só um ponto"
+        hail proclaim praying "just a point"
 ```
 
-- As ligações são **posicionais** (mesma ordem dos campos declarados).
-- Você pode ligar menos nomes do que campos existem — extras são ignorados.
-- Variantes unitárias nunca usam `bearing`.
+- Bindings are **positional** (same order as the declared fields).
+- You can bind fewer names than there are fields — extras are ignored.
+- Unit variants never use `bearing`.
 
 ---
 
-## Covenants genéricos
+## Generic covenants
 
-Covenants podem declarar parâmetros de tipo com `of`:
+Covenants can declare type parameters with `of`:
 
 ```holy
 covenant Option of T
@@ -112,7 +112,7 @@ covenant Either of L and R
         val of R
 ```
 
-Ao instanciar, passe os tipos explicitamente:
+When instantiating, pass the types explicitly:
 
 ```holy
 let there o of Option of atom be manifest Some of Option of atom praying 42
@@ -122,60 +122,60 @@ let there e of Either of atom and word be manifest Left of Either of atom and wo
 
 ---
 
-## Covenants embutidos
+## Built-in covenants
 
-Dois covenants são pré-carregados em todo programa. São genéricos e têm verificação de tipo em runtime.
+Two covenants are pre-loaded in every program. They are generic and have runtime type checking.
 
 ---
 
-### `grace of T` — valor opcional
+### `grace of T` — optional value
 
-Equivalente a `Option` / `Maybe` em outras linguagens. Representa "pode ter ou não ter um valor".
+Equivalent to `Option` / `Maybe` in other languages. Represents "may or may not have a value".
 
-| Variante  | Campos | Significado |
-|-----------|--------|-------------|
-| `granted` | `T`    | um valor está presente |
-| `absent`  | —      | nenhum valor (variante unitária) |
+| Variant   | Fields | Meaning            |
+|-----------|--------|--------------------|
+| `granted` | `T`    | a value is present |
+| `absent`  | —      | no value (unit variant) |
 
 ```holy
--- criando
+-- creating
 let there g of grace of atom be manifest granted of grace of atom praying 42
 let there n of grace of atom be absent of grace of atom
 
--- valor padrão quando declarado sem inicializador
+-- default when declared without an initialiser
 let there be x of grace of word    -- x = absent
 ```
 
 ```holy
--- usando
+-- using
 discern g
     as granted bearing value
         hail proclaim praying hail word_of praying value   -- "42"
     as absent
-        hail proclaim praying "nada aqui"
+        hail proclaim praying "nothing here"
 ```
 
-`manifest granted of grace of atom praying "texto"` lança `TypeError` — o valor interno deve ser do tipo `atom`.
+`manifest granted of grace of atom praying "text"` throws `TypeError` — the inner value must be of type `atom`.
 
 ---
 
-### `verdict of T and E` — resultado falível
+### `verdict of T and E` — fallible result
 
-Equivalente a `Result` em outras linguagens. Representa "operação que pode ter sucesso ou falha".
+Equivalent to `Result` in other languages. Represents "an operation that may succeed or fail".
 
-| Variante     | Campos | Significado |
-|--------------|--------|-------------|
-| `righteous`  | `T`    | operação bem-sucedida |
-| `condemned`  | `E`    | operação falhou |
+| Variant      | Fields | Meaning               |
+|--------------|--------|-----------------------|
+| `righteous`  | `T`    | operation succeeded   |
+| `condemned`  | `E`    | operation failed      |
 
 ```holy
--- criando
+-- creating
 let there r of verdict of atom and word be manifest righteous of verdict of atom and word praying 99
-let there e of verdict of atom and word be manifest condemned of verdict of atom and word praying "entrada inválida"
+let there e of verdict of atom and word be manifest condemned of verdict of atom and word praying "invalid input"
 ```
 
 ```holy
--- usando
+-- using
 discern r
     as righteous bearing value
         hail proclaim praying hail word_of praying value    -- "99"
@@ -183,20 +183,20 @@ discern r
         hail proclaim praying reason
 ```
 
-#### Tipos genéricos aninhados
+#### Nested generic types
 
-Quando `T` ou `E` é ele mesmo genérico, use `thus` para fechar o tipo interno antes do separador externo:
+When `T` or `E` is itself generic, use `thus` to close the inner type before the outer separator:
 
 ```holy
 -- verdict<Stack<atom>, word>
 let there result of verdict of Stack of atom thus and word be hail pop of atom praying s
 ```
 
-Veja [Generics — `thus`](generics.md#thus--disambiguação) para a regra completa.
+See [Generics — `thus`](generics.md#thus--disambiguation) for the full rule.
 
 ---
 
-## Exemplo completo
+## Full example
 
 ```holy
 covenant Direction
@@ -208,19 +208,19 @@ covenant Direction
 salm move upon Direction receiving steps of atom reveals word
     discern its
         as North
-            reveal "subiu " plus hail word_of praying steps
+            reveal "moved up " plus hail word_of praying steps
         as South
-            reveal "desceu " plus hail word_of praying steps
+            reveal "moved down " plus hail word_of praying steps
         as East
-            reveal "foi leste " plus hail word_of praying steps
+            reveal "moved east " plus hail word_of praying steps
         as West
-            reveal "foi oeste " plus hail word_of praying steps
+            reveal "moved west " plus hail word_of praying steps
 
 let there d of Direction be North of Direction
-hail proclaim praying hail move upon d praying 3    -- "subiu 3"
+hail proclaim praying hail move upon d praying 3    -- "moved up 3"
 
 d become East of Direction
-hail proclaim praying hail move upon d praying 5    -- "foi leste 5"
+hail proclaim praying hail move upon d praying 5    -- "moved east 5"
 
 amen
 ```

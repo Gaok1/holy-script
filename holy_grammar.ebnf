@@ -11,7 +11,14 @@ top_decl    ::= salm
             |   covenant
 
 
-testament   ::= "testament" ident ("revealing" reveal_list)?
+-- TESTAMENTS (modules)
+-- without "revealing": imports everything
+-- with "revealing": imports only the listed symbols (scriptures, salms, covenants, etc.)
+-- "from" clauses navigate subdirectories: "testament utils from helpers from math"
+--   resolves to helpers/math/utils.holy relative to the current file.
+-- If no file is found and no "from" is given, the interpreter checks the
+--   built-in standard library (e.g. "testament arithmos" loads the math stdlib).
+testament   ::= "testament" ident ("from" ident)* ("revealing" reveal_list)?
 
 reveal_list ::= ident ("," ident)* ("and" ident)?
 
@@ -51,7 +58,12 @@ statement   ::= decl
             |   transgress
 
 decl        ::= "let there be" ident "of" type
+-- untyped declaration: type is inferred and locked on the first "become" assignment
+            |   "let there be" ident
+-- declaration with an explicit type and initial value
             |   "let there" ident "of" type "be" expr
+-- declaration with inferred type: type is deduced from the expression and locked immediately
+            |   "let there" ident "be" expr
 
 assign      ::= ident "become" expr
 

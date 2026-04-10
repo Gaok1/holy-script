@@ -31,6 +31,7 @@
         { "include": "#builtin-type" },
         { "include": "#builtin-covenant-variant" },
         { "include": "#keyword-context-marker" },
+        { "include": "#keyword-exception" },
         { "include": "#keyword-control" },
         { "include": "#keyword-control-loop" },
         { "include": "#keyword-control-bearing" },
@@ -168,7 +169,7 @@
         "sin-def": {
             "match": "\\b(sin)\\s+([a-zA-Z_]\\w*)",
             "captures": {
-                "1": { "name": "keyword.declaration.class.holy" },
+                "1": { "name": "keyword.control.exception.holy" },
                 "2": { "name": "entity.name.type.holy" }
             }
         },
@@ -293,19 +294,25 @@
         },
 
         "field-access": {
-            "comment": "field from obj — highlights field name and from/its as keywords",
-            "match": "\\b([a-zA-Z_]\\w*)\\s+(from)\\s+(?:([a-zA-Z_]\\w*)|\\b(its)\\b)",
+            "comment": "field from its|obj — its must come first so it isn't swallowed by the generic identifier alternative",
+            "match": "\\b([a-zA-Z_]\\w*)\\s+(from)\\s+(?:(its)\\b|([a-zA-Z_]\\w*))",
             "captures": {
                 "1": { "name": "variable.other.holy" },
                 "2": { "name": "keyword.other.holy" },
-                "3": { "name": "variable.other.holy" },
-                "4": { "name": "variable.language.holy" }
+                "3": { "name": "variable.language.holy" },
+                "4": { "name": "variable.other.holy" }
             }
+        },
+
+        "keyword-exception": {
+            "comment": "transgress — throw; blood-red scope shared with sin declaration",
+            "name": "keyword.control.exception.holy",
+            "match": "\\b(transgress)\\b"
         },
 
         "keyword-control": {
             "name": "keyword.control.holy",
-            "match": "\\b(whether|otherwise|confess|absolve|reveal|transgress|discern|amen)\\b"
+            "match": "\\b(whether|otherwise|confess|absolve|reveal|discern|amen)\\b"
         },
 
         "keyword-control-loop": {
@@ -322,7 +329,7 @@
 
         "keyword-declaration": {
             "name": "keyword.declaration.holy",
-            "match": "\\b(become|receiving|reveals|revealing|covenant)\\b"
+            "match": "\\b(become|be|receiving|reveals|revealing|covenant)\\b"
         },
 
         "storage-type": {

@@ -41,18 +41,20 @@ pub fn builtin_covenants() -> (
 /// Default value for `grace of T` → `absent` (no inner value).
 pub fn default_grace() -> Value {
     Value::CovenantVariant {
-        covenant: "grace".into(),
-        variant:  "absent".into(),
-        fields:   vec![],
+        covenant:  "grace".into(),
+        type_args: vec![],
+        variant:   "absent".into(),
+        fields:    vec![],
     }
 }
 
 /// Default value for `verdict of T, E` → `condemned` with an empty word.
 pub fn default_verdict() -> Value {
     Value::CovenantVariant {
-        covenant: "verdict".into(),
-        variant:  "condemned".into(),
-        fields:   vec![Value::Str(String::new())],
+        covenant:  "verdict".into(),
+        type_args: vec![],
+        variant:   "condemned".into(),
+        fields:    vec![Value::Str(String::new())],
     }
 }
 
@@ -67,9 +69,10 @@ pub fn make_granted(inner_ty: &HolyType, value: Value, check: impl Fn(&HolyType,
         ));
     }
     Ok(Value::CovenantVariant {
-        covenant: "grace".into(),
-        variant:  "granted".into(),
-        fields:   vec![value],
+        covenant:  "grace".into(),
+        type_args: vec![inner_ty.clone()],
+        variant:   "granted".into(),
+        fields:    vec![value],
     })
 }
 
@@ -88,8 +91,9 @@ pub fn make_verdict_variant(
         ));
     }
     Ok(Value::CovenantVariant {
-        covenant: "verdict".into(),
-        variant:  which.into(),
-        fields:   vec![value],
+        covenant:  "verdict".into(),
+        type_args: vec![field_ty.clone()],
+        variant:   which.into(),
+        fields:    vec![value],
     })
 }

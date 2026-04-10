@@ -9,8 +9,11 @@ pub enum Value {
     Bool(bool),
     Legion(Vec<Value>),
     Void,
-    CovenantVariant { covenant: String, variant: String, fields: Vec<Value> },
-    Scripture { type_name: String, fields: HashMap<String, Value> },
+    /// `type_args` carries the resolved generic type parameters (e.g. `[Atom]` for
+    /// `Stack of atom`).  Empty vec means "pending" — type params not yet resolved.
+    CovenantVariant { covenant: String, type_args: Vec<crate::ast::HolyType>, variant: String, fields: Vec<Value> },
+    /// Same semantics as CovenantVariant.type_args.
+    Scripture { type_name: String, type_args: Vec<crate::ast::HolyType>, fields: HashMap<String, Value> },
 }
 
 impl fmt::Display for Value {
@@ -25,7 +28,7 @@ impl fmt::Display for Value {
                 write!(f, "[{}]", args)
             }
             Value::Void => write!(f, "void"),
-            Value::CovenantVariant { covenant, variant, fields } => {
+            Value::CovenantVariant { covenant, variant, fields, .. } => {
                 if fields.is_empty() {
                     write!(f, "{}::{}", covenant, variant)
                 } else {
@@ -33,7 +36,7 @@ impl fmt::Display for Value {
                     write!(f, "{}::{}({})", covenant, variant, args)
                 }
             }
-            Value::Scripture { type_name, fields } => {
+            Value::Scripture { type_name, fields, .. } => {
                 write!(f, "{}{{", type_name)?;
                 let mut first = true;
                 let mut keys: Vec<_> = fields.keys().collect();

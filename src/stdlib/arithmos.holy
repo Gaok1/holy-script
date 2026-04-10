@@ -1,0 +1,23 @@
+-- arithmos — The Holy Script standard math library
+-- Name: Arithmoi (Αριθμοί), the Greek title of the Bible book of Numbers
+
+-- ── Constants ─────────────────────────────────────────────────────────────────
+
+salm pi reveals fractional
+    reveal 3.141592653589793
+
+salm euler reveals fractional
+    reveal 2.718281828459045
+
+salm tau reveals fractional
+    reveal 6.283185307179586
+
+-- ── Angle conversion ──────────────────────────────────────────────────────────
+
+salm to_degrees receiving rad of fractional reveals fractional
+    reveal rad times 57.29577951308232
+
+salm to_radians receiving deg of fractional reveals fractional
+    reveal deg times 0.017453292519943295
+
+amen

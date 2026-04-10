@@ -1,37 +1,31 @@
-# Tipos e Variáveis
+# Types & Variables
 
-Holy é fortemente tipado: todo valor tem um tipo declarado e o runtime recusa valores que não o correspondam. Não há conversão implícita.
-
----
-
-## Tipos primitivos
-
-| Tipo         | Significado          | Padrão        | Exemplos de literal     |
-|--------------|----------------------|---------------|-------------------------|
-| `atom`       | inteiro (i64)        | `0`           | `42`, `-7`, `0`         |
-| `fractional` | decimal (f64)        | `0.0`         | `3.14`, `-0.5`          |
-| `word`       | texto (UTF-8)        | `""`          | `"hello"`, `""`         |
-| `dogma`      | booleano             | `forsaken`    | `blessed`, `forsaken`   |
-| `void`       | ausência de valor    | —             | —                       |
-| `legion of T`| coleção tipada       | vazio         | ver [Coleções](collections.md) |
-
-`blessed` = verdadeiro · `forsaken` = falso
+Holy is strongly typed: every value has a declared type and the runtime rejects values that do not match. There is no implicit conversion.
 
 ---
 
-## Variáveis
+## Primitive types
 
-### Declaração sem valor inicial
+| Type         | Meaning             | Default       | Literal examples        |
+|--------------|---------------------|---------------|-------------------------|
+| `atom`       | integer (i64)       | `0`           | `42`, `-7`, `0`         |
+| `fractional` | decimal (f64)       | `0.0`         | `3.14`, `-0.5`          |
+| `word`       | text (UTF-8)        | `""`          | `"hello"`, `""`         |
+| `dogma`      | boolean             | `forsaken`    | `blessed`, `forsaken`   |
+| `void`       | no value            | —             | —                       |
+| `legion of T`| typed collection    | empty         | see [Collections](collections.md) |
 
-Inicializa com o padrão do tipo (`0`, `""`, `forsaken`, etc.):
+`blessed` = true · `forsaken` = false
 
-```holy
-let there be x of atom          -- x = 0
-let there be msg of word        -- msg = ""
-let there be flag of dogma      -- flag = forsaken
-```
+---
 
-### Declaração com valor inicial
+## Variables
+
+Holy offers four ways to declare variables, with increasing flexibility.
+
+### Typed declaration with initial value
+
+The type is explicit and the initial value is checked against it immediately:
 
 ```holy
 let there x of atom be 42
@@ -40,120 +34,168 @@ let there active of dogma be blessed
 let there ratio of fractional be 3.14
 ```
 
-### Reatribuição
+### Typed declaration without initial value
+
+Initialises with the type's default value (`0`, `""`, `forsaken`, etc.):
+
+```holy
+let there be x of atom          -- x = 0
+let there be msg of word        -- msg = ""
+let there be flag of dogma      -- flag = forsaken
+```
+
+### Inferred type — `let there x be expr`
+
+The type is derived from the expression's value and locked permanently:
+
+```holy
+let there n be 42               -- n: atom (locked)
+let there greeting be "Hail!"   -- greeting: word (locked)
+let there xs be hail legion praying 1, 2 and 3   -- xs: legion of atom (locked)
+```
+
+Once the type is inferred, `become` only accepts values of that same type:
+
+```holy
+n become 99         -- ok: atom
+n become "oops"     -- TypeError: demands atom, received word
+```
+
+For `legion`, the inner type is inferred from the first element. A literally empty legion has no inner type (generic `legion`), which accepts any element — prefer declaring the type explicitly in that case.
+
+### Untyped declaration — `let there be x`
+
+The variable exists but has no type. The type is inferred and locked on the **first** assignment via `become`:
+
+```holy
+let there be result
+
+whether condition
+    result become 42
+otherwise
+    result become 0
+
+-- result is now atom, locked by whichever branch ran first
+result become 99    -- ok
+result become "no"  -- TypeError
+```
+
+The type is determined at runtime by whichever branch executes first — not by the compiler.
+
+### Reassignment
 
 ```holy
 x become x plus 1
 greeting become "Farewell"
 ```
 
-A variável já deve existir. O novo valor deve bater com o tipo declarado.
+The new value must match the variable's already-locked type.
 
 ---
 
-## Operadores
+## Operators
 
-### Aritméticos
+### Arithmetic
 
-| Expressão          | Operação      | Funciona com                            |
-|--------------------|---------------|-----------------------------------------|
-| `a plus b`         | adição        | `atom`, `fractional`, `word` (concatena)|
-| `a minus b`        | subtração     | `atom`, `fractional`                    |
-| `a times b`        | multiplicação | `atom`, `fractional`                    |
-| `a over b`         | divisão       | `atom` (inteira), `fractional`          |
-| `a remainder b`    | módulo        | `atom`                                  |
-| `negate a`         | menos unário  | `atom`, `fractional`                    |
+| Expression         | Operation      | Works with                               |
+|--------------------|----------------|------------------------------------------|
+| `a plus b`         | addition       | `atom`, `fractional`, `word` (concat)    |
+| `a minus b`        | subtraction    | `atom`, `fractional`                     |
+| `a times b`        | multiplication | `atom`, `fractional`                     |
+| `a over b`         | division       | `atom` (integer), `fractional`           |
+| `a remainder b`    | modulo         | `atom`                                   |
+| `negate a`         | unary minus    | `atom`, `fractional`                     |
 
 ```holy
 let there x of atom be 10 remainder 3       -- 1
-let there y of atom be 7 over 2             -- 3  (divisão inteira!)
+let there y of atom be 7 over 2             -- 3  (integer division!)
 let there z of fractional be 7.0 over 2     -- 3.5
 let there s of word be "Holy" plus " Lang"  -- "Holy Lang"
 ```
 
-Misturar `atom` e `fractional` promove ambos para `fractional`.
+Mixing `atom` and `fractional` promotes both to `fractional`.
 
-### Comparação
+### Comparison
 
-| Expressão              | Significado |
-|------------------------|-------------|
-| `a is b`               | igual       |
-| `a is not b`           | diferente   |
-| `a greater than b`     | maior       |
-| `a lesser than b`      | menor       |
-| `a no greater than b`  | menor ou igual |
-| `a no lesser than b`   | maior ou igual |
+| Expression             | Meaning          |
+|------------------------|------------------|
+| `a is b`               | equal            |
+| `a is not b`           | not equal        |
+| `a greater than b`     | greater than     |
+| `a lesser than b`      | less than        |
+| `a no greater than b`  | less or equal    |
+| `a no lesser than b`   | greater or equal |
 
-`is` / `is not` funcionam em qualquer tipo. Comparações ordenadas funcionam em `atom` e `fractional`.
+`is` / `is not` work on any type. Ordered comparisons work on `atom` and `fractional`.
 
 ---
 
-## Precedência de operadores
+## Operator precedence
 
-Do menor para o maior:
+From lowest to highest:
 
-| Nível | Operadores                          |
-|-------|-------------------------------------|
-| 1     | comparações (`is`, `greater`, …)    |
-| 2     | `plus`, `minus`                     |
-| 3     | `times`, `over`, `remainder`        |
-| 4     | `negate` (unário)                   |
-| 5     | átomos (literais, variáveis, calls) |
+| Level | Operators                          |
+|-------|------------------------------------|
+| 1     | comparisons (`is`, `greater`, …)   |
+| 2     | `plus`, `minus`                    |
+| 3     | `times`, `over`, `remainder`       |
+| 4     | `negate` (unary)                   |
+| 5     | atoms (literals, variables, calls) |
 
 ```holy
--- times tem mais precedência que plus:
+-- times has higher precedence than plus:
 -- 2 plus 3 times 4  →  2 + (3 * 4) = 14
 let there x of atom be 2 plus 3 times 4
 ```
 
 ---
 
-## Agrupamento — `after`
+## Expression grouping — `after`
 
-`after` aprofunda o parser para o nível de expressão completa, equivalente a abrir parênteses. O `thus` é **opcional**: só é necessário quando a expressão externa deve continuar após o grupo.
+`after` deepens the parser into full expression parsing, equivalent to opening a parenthesis. `thus` is **optional**: it is only needed when the outer expression must continue after the group.
 
 ```holy
-after 2 plus 3 thus times 4   -- (2 + 3) * 4 = 20  (thus fecha o grupo cedo)
-5 plus after 10 minus 3       -- 5 + (10 - 3) = 12  (sem thus, fecha naturalmente)
-a times after a plus b        -- a * (a + b)         (sem thus)
+after 2 plus 3 thus times 4   -- (2 + 3) * 4 = 20  (thus closes the group early)
+5 plus after 10 minus 3       -- 5 + (10 - 3) = 12  (no thus needed)
+a times after a plus b        -- a * (a + b)         (no thus needed)
 ```
 
-Veja mais casos em [Aninhamento](nesting.md).
+See more cases in [Nesting](nesting.md).
 
 ---
 
-## Conversão de tipo
+## Type conversion
 
-Não há coerção implícita. Use os salms embutidos:
+There is no implicit coercion. Use the built-in salms:
 
 ```holy
 -- word → atom
 let there n of atom be hail atom_of praying "42"
 
--- qualquer coisa → word
+-- anything → word
 let there s of word be hail word_of praying 99
 let there b of word be hail word_of praying blessed
 ```
 
 ---
 
-## Métodos embutidos em `word`
+## Built-in `word` methods
 
-| Método | Retorna | Descrição |
-|--------|---------|-----------|
-| `hail length upon s` | `atom` | número de caracteres |
-| `hail is_empty upon s` | `dogma` | se o texto está vazio |
-| `hail at upon s praying i` | `word` | caractere no índice `i` (base zero) |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `hail length upon s` | `atom` | number of characters |
+| `hail is_empty upon s` | `dogma` | whether the text is empty |
+| `hail at upon s praying i` | `word` | character at index `i` (zero-based) |
 | `hail slice upon s praying start and end` | `word` | substring `[start, end)` |
-| `hail contains upon s praying sub` | `dogma` | se `sub` está contido em `s` |
-| `hail starts_with upon s praying prefix` | `dogma` | se começa com `prefix` |
-| `hail ends_with upon s praying suffix` | `dogma` | se termina com `suffix` |
-| `hail index_of upon s praying sub` | `grace of atom` | posição de `sub` ou `absent` |
-| `hail to_upper upon s` | `word` | maiúsculas |
-| `hail to_lower upon s` | `word` | minúsculas |
-| `hail trim upon s` | `word` | remove espaços nas bordas |
-| `hail replace upon s praying old and new` | `word` | substitui todas as ocorrências |
-| `hail split upon s praying sep` | `legion of word` | divide pelo separador `sep` |
+| `hail contains upon s praying sub` | `dogma` | whether `sub` is contained in `s` |
+| `hail starts_with upon s praying prefix` | `dogma` | whether `s` starts with `prefix` |
+| `hail ends_with upon s praying suffix` | `dogma` | whether `s` ends with `suffix` |
+| `hail index_of upon s praying sub` | `grace of atom` | position of `sub` or `absent` |
+| `hail to_upper upon s` | `word` | uppercase |
+| `hail to_lower upon s` | `word` | lowercase |
+| `hail trim upon s` | `word` | strips leading and trailing whitespace |
+| `hail replace upon s praying old and new` | `word` | replaces all occurrences |
+| `hail split upon s praying sep` | `legion of word` | splits by separator `sep` |
 
 ```holy
 let there s of word be "Hello, World!"
@@ -170,13 +212,13 @@ discern idx
     as granted bearing i
         hail proclaim praying hail word_of praying i    -- 7
     as absent
-        hail proclaim praying "não encontrado"
+        hail proclaim praying "not found"
 ```
 
-`at`, `slice` lançam `IndexOutOfBounds` para índices inválidos.
+`at` and `slice` throw `IndexOutOfBounds` for out-of-range indices.
 
 ---
 
-## Métodos embutidos em `legion of T`
+## Built-in `legion of T` methods
 
-Veja [Coleções](collections.md) para a referência completa.
+See [Collections](collections.md) for the full reference.

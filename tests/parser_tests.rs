@@ -32,7 +32,7 @@ fn parses_decl_no_value() {
     let p = parse("let there be x of word\namen\n");
     assert!(matches!(
         p.stmts.first(),
-        Some(Stmt::DeclNoVal { name, ty: HolyType::Word }) if name == "x"
+        Some(Stmt::DeclNoVal { name, ty: Some(HolyType::Word) }) if name == "x"
     ));
 }
 

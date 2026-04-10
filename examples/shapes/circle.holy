@@ -1,0 +1,18 @@
+-- shapes/circle.holy — Circle geometry using arithmos constants
+
+testament arithmos
+
+scripture Circle
+    radius of fractional
+
+salm area upon Circle reveals fractional
+    reveal hail pi times radius from its times radius from its
+
+salm circumference upon Circle reveals fractional
+    reveal hail tau times radius from its
+
+salm arc_length upon Circle receiving angle_deg of fractional reveals fractional
+    let there angle_rad of fractional be hail to_radians praying angle_deg
+    reveal radius from its times angle_rad
+
+amen

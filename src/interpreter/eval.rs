@@ -87,9 +87,10 @@ impl Interpreter {
                 ));
             }
             return Ok(Value::CovenantVariant {
-                covenant: covenant.clone(),
-                variant:  name.to_string(),
-                fields:   Vec::new(),
+                covenant:  covenant.clone(),
+                type_args: vec![],
+                variant:   name.to_string(),
+                fields:    Vec::new(),
             });
         }
         Err(builtin_sin(
@@ -110,22 +111,27 @@ impl Interpreter {
             .ok_or_else(|| builtin_sin("UndefinedScripture", format!("'{}' is neither a scripture nor a covenant variant — it cannot be manifested", name)))?
             .clone();
 
-        if args.len() != def.len() {
+        if args.len() != def.fields.len() {
             return Err(builtin_sin(
                 "InvalidArgumentCount",
-                format!("the scripture '{}' demands {} field(s), but {} were offered", name, def.len(), args.len()),
+                format!("the scripture '{}' demands {} field(s), but {} were offered", name, def.fields.len(), args.len()),
             ));
         }
 
         let mut fields = HashMap::new();
-        for ((fname, field_ty), arg) in def.iter().zip(args.iter()) {
+        for ((fname, field_ty), arg) in def.fields.iter().zip(args.iter()) {
             let v = self.eval_expr(arg)?;
-            if self.is_concrete_type(field_ty) {
-                self.expect_type(field_ty, &v, &format!("the offering for field '{}.{}' is profane and rejected", name, fname))?;
+            let resolved_field_ty = self.resolve_type(field_ty);
+            if self.is_concrete_type(&resolved_field_ty) {
+                self.expect_type(&resolved_field_ty, &v, &format!("the offering for field '{}.{}' is profane and rejected", name, fname))?;
             }
             fields.insert(fname.clone(), v);
         }
-        Ok(Value::Scripture { type_name: name.to_string(), fields })
+
+        // Populate type_args from current bindings for this scripture's type params.
+        let type_args = self.resolve_type_args(&def.type_params);
+
+        Ok(Value::Scripture { type_name: name.to_string(), type_args, fields })
     }
 
     fn eval_manifest_covenant_variant(
@@ -153,7 +159,7 @@ impl Interpreter {
             self.expect_type(field_ty, &v, &format!("the offering for variant field '{}.{}' is profane and rejected", variant, fname))?;
             values.push(v);
         }
-        Ok(Value::CovenantVariant { covenant: covenant.to_string(), variant: variant.to_string(), fields: values })
+        Ok(Value::CovenantVariant { covenant: covenant.to_string(), type_args: vec![], variant: variant.to_string(), fields: values })
     }
 
     // ── Explicit covenant variant construction ────────────────────────────────
@@ -203,7 +209,7 @@ impl Interpreter {
             Some(ty) if self.is_concrete_type(ty) => {
                 make_granted(ty, val, |ty, v| self.value_matches_type(ty, v))
             }
-            _ => Ok(Value::CovenantVariant { covenant: "grace".into(), variant: "granted".into(), fields: vec![val] }),
+            _ => Ok(Value::CovenantVariant { covenant: "grace".into(), type_args: vec![], variant: "granted".into(), fields: vec![val] }),
         }
     }
 
@@ -224,7 +230,7 @@ impl Interpreter {
             Some(ty) if self.is_concrete_type(ty) => {
                 make_verdict_variant(variant, ty, val, |ty, v| self.value_matches_type(ty, v))
             }
-            _ => Ok(Value::CovenantVariant { covenant: "verdict".into(), variant: variant.into(), fields: vec![val] }),
+            _ => Ok(Value::CovenantVariant { covenant: "verdict".into(), type_args: vec![], variant: variant.into(), fields: vec![val] }),
         }
     }
 
@@ -248,7 +254,7 @@ impl Interpreter {
             }
             values.push(v);
         }
-        Ok(Value::CovenantVariant { covenant: covenant.into(), variant: variant.into(), fields: values })
+        Ok(Value::CovenantVariant { covenant: covenant.into(), type_args: vec![], variant: variant.into(), fields: values })
     }
 
     pub(super) fn eval_typed_unit_variant(
@@ -262,7 +268,7 @@ impl Interpreter {
         }
         match self.covenant_variants.get(variant) {
             Some((cov, fields)) if cov == covenant && fields.is_empty() => {
-                Ok(Value::CovenantVariant { covenant: covenant.into(), variant: variant.into(), fields: vec![] })
+                Ok(Value::CovenantVariant { covenant: covenant.into(), type_args: vec![], variant: variant.into(), fields: vec![] })
             }
             Some((cov, _)) if cov != covenant => Err(builtin_sin(
                 "InvalidDiscern",
@@ -298,7 +304,7 @@ impl Interpreter {
             HolyType::Custom(name) | HolyType::Generic(name, _) => {
                 self.scriptures
                     .get(name)
-                    .and_then(|fields| fields.iter().find(|(fname, _)| fname == field))
+                    .and_then(|def| def.fields.iter().find(|(fname, _)| fname == field))
                     .map(|(_, field_ty)| field_ty.clone())
             }
             _ => None,

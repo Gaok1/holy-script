@@ -1,65 +1,65 @@
-# Coleções — `legion of T`
+# Collections — `legion of T`
 
-`legion of T` é a coleção tipada embutida de Holy. Pense nela como um array onde o tipo do elemento é sempre declarado explicitamente.
+`legion of T` is Holy's built-in typed collection. Think of it as an array where the element type is always declared explicitly.
 
 ---
 
-## Criando uma legion
+## Creating a legion
 
-Use o salm embutido `legion` com `hail`:
+Use the built-in `legion` salm with `hail`:
 
 ```holy
 let there xs    of legion of atom be hail legion praying 1, 2 and 3
 let there names of legion of word be hail legion praying "Ava" and "Noah"
 ```
 
-Declaração sem valor inicial (legion vazia):
+Declaration without an initial value (empty legion):
 
 ```holy
-let there be xs of legion of atom      -- [] (vazio)
+let there be xs of legion of atom      -- [] (empty)
 ```
 
 ---
 
-## Tipagem em runtime
+## Runtime typing
 
-Uma `legion of atom` só aceita elementos `atom`. Tentar inserir outro tipo lança `TypeError`:
+A `legion of atom` only accepts `atom` elements. Trying to insert another type throws `TypeError`:
 
 ```holy
 -- OK
 let there xs of legion of atom be hail legion praying 1 and 2
 xs become hail push upon xs praying 3
 
--- TypeError: "oops" não é atom
+-- TypeError: "oops" is not atom
 let there ys of legion of atom be hail legion praying 1 and "oops"
 ```
 
 ---
 
-## Métodos disponíveis
+## Available methods
 
-Todos os métodos seguem a sintaxe padrão:
+All methods follow the standard syntax:
 
 ```holy
-hail método upon alvo
-hail método upon alvo praying arg1, arg2
+hail method upon target
+hail method upon target praying arg1, arg2
 ```
 
-| Método | Retorna | Descrição |
-|--------|---------|-----------|
-| `hail length upon xs` | `atom` | número de elementos |
-| `hail is_empty upon xs` | `dogma` | se a legion está vazia |
-| `hail at upon xs praying i` | `T` | elemento no índice `i` (base zero) |
-| `hail first upon xs` | `grace of T` | primeiro elemento ou `absent` |
-| `hail last upon xs` | `grace of T` | último elemento ou `absent` |
-| `hail contains upon xs praying v` | `dogma` | se `v` está na legion |
-| `hail index_of upon xs praying v` | `grace of atom` | posição de `v` ou `absent` |
-| `hail reverse upon xs` | `legion of T` | nova legion invertida |
-| `hail push upon xs praying v` | `legion of T` | nova legion com `v` no final |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `hail length upon xs` | `atom` | number of elements |
+| `hail is_empty upon xs` | `dogma` | whether the legion is empty |
+| `hail at upon xs praying i` | `T` | element at index `i` (zero-based) |
+| `hail first upon xs` | `grace of T` | first element or `absent` |
+| `hail last upon xs` | `grace of T` | last element or `absent` |
+| `hail contains upon xs praying v` | `dogma` | whether `v` is in the legion |
+| `hail index_of upon xs praying v` | `grace of atom` | position of `v` or `absent` |
+| `hail reverse upon xs` | `legion of T` | new reversed legion |
+| `hail push upon xs praying v` | `legion of T` | new legion with `v` appended |
 | `hail slice upon xs praying start and end` | `legion of T` | sub-legion `[start, end)` |
-| `hail concat upon xs praying ys` | `legion of T` | nova legion com `ys` concatenada |
+| `hail concat upon xs praying ys` | `legion of T` | new legion with `ys` appended |
 
-> **Importante:** todos os métodos que retornam `legion of T` (`push`, `slice`, `concat`, `reverse`) **não mutam** a legion existente — retornam uma nova. Reatribua se precisar:
+> **Important:** all methods that return `legion of T` (`push`, `slice`, `concat`, `reverse`) **do not mutate** the existing legion — they return a new one. Reassign if you need to keep the result:
 > ```holy
 > xs become hail push upon xs praying 99
 > xs become hail reverse upon xs
@@ -67,9 +67,9 @@ hail método upon alvo praying arg1, arg2
 
 ---
 
-## Exemplos práticos
+## Practical examples
 
-### Iterar uma legion
+### Iterating a legion
 
 ```holy
 let there xs of legion of atom be hail legion praying 10, 20 and 30
@@ -80,20 +80,20 @@ litany for i lesser than hail length upon xs
     i become i plus 1
 ```
 
-### Construir uma legion dinamicamente
+### Building a legion dynamically
 
 ```holy
 let there be result of legion of atom
 let there i of atom be 1
 
 litany for i no greater than 5
-    result become hail push upon result praying i times i   -- quadrados: 1, 4, 9, 16, 25
+    result become hail push upon result praying i times i   -- squares: 1, 4, 9, 16, 25
     i become i plus 1
 
 hail proclaim praying hail word_of praying result
 ```
 
-### Fatiar e concatenar
+### Slicing and concatenating
 
 ```holy
 let there xs   of legion of atom be hail legion praying 1, 2, 3, 4 and 5
@@ -104,9 +104,9 @@ let there all  of legion of atom be hail concat upon head praying tail    -- [1,
 
 ---
 
-## `legion` genérico
+## Generic `legion`
 
-Você pode declarar scriptures e salms que trabalham com `legion of T`:
+You can declare scriptures and salms that work with `legion of T`:
 
 ```holy
 salm first of T receiving xs of legion of T reveals verdict of T and word
@@ -115,4 +115,4 @@ salm first of T receiving xs of legion of T reveals verdict of T and word
     reveal manifest righteous of verdict of T and word praying hail at upon xs praying 0
 ```
 
-`at` lança `IndexOutOfBounds` para índices fora do intervalo. `slice` com `start > end` ou `end > length` também lança `IndexOutOfBounds`.
+`at` throws `IndexOutOfBounds` for out-of-range indices. `slice` with `start > end` or `end > length` also throws `IndexOutOfBounds`.

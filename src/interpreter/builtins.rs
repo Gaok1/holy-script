@@ -11,7 +11,7 @@ const MESSAGE_FIELD: &str = "message";
 pub fn builtin_sin(name: &str, message: impl Into<String>) -> HolyError {
     let mut fields = HashMap::new();
     fields.insert(MESSAGE_FIELD.to_string(), Value::Str(message.into()));
-    HolyError::Sin { type_name: name.to_string(), fields }
+    HolyError::Sin { type_name: name.to_string(), fields, stack_trace: vec![] }
 }
 
 /// Returns the schema for all built-in sin types.
@@ -30,6 +30,7 @@ pub fn builtin_sins() -> HashMap<String, Vec<(String, HolyType)>> {
         "UndefinedScripture",
         "UndefinedSin",
         "UndefinedType",
+        "UndefinedTestament",
         "UndefinedVariable",
     ]
     .into_iter()
@@ -41,33 +42,37 @@ pub fn builtin_sins() -> HashMap<String, Vec<(String, HolyType)>> {
 
 pub fn grace_granted(v: Value) -> Value {
     Value::CovenantVariant {
-        covenant: "grace".to_string(),
-        variant:  "granted".to_string(),
-        fields:   vec![v],
+        covenant:  "grace".to_string(),
+        type_args: vec![],
+        variant:   "granted".to_string(),
+        fields:    vec![v],
     }
 }
 
 pub fn grace_absent() -> Value {
     Value::CovenantVariant {
-        covenant: "grace".to_string(),
-        variant:  "absent".to_string(),
-        fields:   vec![],
+        covenant:  "grace".to_string(),
+        type_args: vec![],
+        variant:   "absent".to_string(),
+        fields:    vec![],
     }
 }
 
 pub fn verdict_righteous(v: Value) -> Value {
     Value::CovenantVariant {
-        covenant: "verdict".to_string(),
-        variant:  "righteous".to_string(),
-        fields:   vec![v],
+        covenant:  "verdict".to_string(),
+        type_args: vec![],
+        variant:   "righteous".to_string(),
+        fields:    vec![v],
     }
 }
 
 pub fn verdict_condemned(msg: impl Into<String>) -> Value {
     Value::CovenantVariant {
-        covenant: "verdict".to_string(),
-        variant:  "condemned".to_string(),
-        fields:   vec![Value::Str(msg.into())],
+        covenant:  "verdict".to_string(),
+        type_args: vec![],
+        variant:   "condemned".to_string(),
+        fields:    vec![Value::Str(msg.into())],
     }
 }
 
@@ -259,6 +264,115 @@ pub fn call_builtin_fn(name: &str, args: Vec<Value>) -> Option<EvalResult> {
                 (Value::Int(base),   Value::Float(exp))            => Ok(Value::Float((*base as f64).powf(*exp))),
                 _ => Err(builtin_sin("TypeError", "'pow' demands numeric arguments")),
             })
+        }
+
+        "sqrt" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'sqrt' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.sqrt())))
+        }
+
+        // ── Trigonometry (arguments and results in radians) ───────────────────
+        "sine" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'sine' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.sin())))
+        }
+
+        "cos" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'cos' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.cos())))
+        }
+
+        "tan" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'tan' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.tan())))
+        }
+
+        "asin" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'asin' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.asin())))
+        }
+
+        "acos" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'acos' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.acos())))
+        }
+
+        "atan" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'atan' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.atan())))
+        }
+
+        "atan2" => {
+            if args.len() != 2 {
+                return Some(Err(builtin_sin("InvalidArgumentCount", "'atan2' demands 2 offerings (y, x)")));
+            }
+            let y = match &args[0] {
+                Value::Int(n)   => *n as f64,
+                Value::Float(x) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'atan2' demands numeric arguments"))),
+            };
+            let x = match &args[1] {
+                Value::Int(n)   => *n as f64,
+                Value::Float(x) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'atan2' demands numeric arguments"))),
+            };
+            Some(Ok(Value::Float(y.atan2(x))))
+        }
+
+        // ── Logarithms ────────────────────────────────────────────────────────
+        "ln" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'ln' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.ln())))
+        }
+
+        "log2" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'log2' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.log2())))
+        }
+
+        "log10" => {
+            let x = match args.first() {
+                Some(Value::Int(n))   => *n as f64,
+                Some(Value::Float(x)) => *x,
+                _ => return Some(Err(builtin_sin("TypeError", "'log10' demands a numeric argument"))),
+            };
+            Some(Ok(Value::Float(x.log10())))
         }
 
         _ => None,

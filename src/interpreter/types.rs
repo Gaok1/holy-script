@@ -14,20 +14,20 @@ impl Interpreter {
             HolyType::Void       => matches!(value, Value::Void),
 
             HolyType::Custom(name) => match value {
-                Value::Scripture { type_name, .. }      => type_name == name,
-                Value::CovenantVariant { covenant, .. } => covenant == name,
+                Value::Scripture { type_name, .. }               => type_name == name,
+                Value::CovenantVariant { covenant, .. }          => covenant == name,
                 _ => false,
             },
 
             HolyType::Generic(name, args) => match (name.as_str(), value) {
-                ("grace", Value::CovenantVariant { covenant, variant, fields }) if covenant == "grace" => {
+                ("grace", Value::CovenantVariant { covenant, variant, fields, .. }) if covenant == "grace" => {
                     match (args.first(), variant.as_str()) {
                         (Some(inner), "granted") => fields.len() == 1 && self.value_matches_type(inner, &fields[0]),
                         (_, "absent")            => fields.is_empty(),
                         _                        => false,
                     }
                 }
-                ("verdict", Value::CovenantVariant { covenant, variant, fields }) if covenant == "verdict" => {
+                ("verdict", Value::CovenantVariant { covenant, variant, fields, .. }) if covenant == "verdict" => {
                     match (args.first(), args.get(1), variant.as_str()) {
                         (Some(ok_ty), _, "righteous")  => fields.len() == 1 && self.value_matches_type(ok_ty, &fields[0]),
                         (_, Some(err_ty), "condemned") => fields.len() == 1 && self.value_matches_type(err_ty, &fields[0]),
@@ -36,12 +36,21 @@ impl Interpreter {
                 }
                 ("legion", Value::Legion(items)) => match args.as_slice() {
                     [inner_ty] => items.iter().all(|item| self.value_matches_type(inner_ty, item)),
-                    _          => false,
+                    // no type arg (inferred from empty literal) — accept any legion
+                    [] => true,
+                    _  => false,
                 },
+                // User-defined generic types (e.g. `Stack of atom`):
+                // A value with empty type_args is "pending" — accepted anywhere by name.
+                // A value with resolved type_args must match exactly.
                 _ => match value {
-                    Value::Scripture { type_name, .. }      => type_name == name,
-                    Value::CovenantVariant { covenant, .. } => covenant == name,
-                    _                                       => false,
+                    Value::Scripture { type_name, type_args: val_targs, .. } => {
+                        type_name == name && (val_targs.is_empty() || val_targs == args)
+                    }
+                    Value::CovenantVariant { covenant, type_args: val_targs, .. } => {
+                        covenant == name && (val_targs.is_empty() || val_targs == args)
+                    }
+                    _ => false,
                 },
             },
         }
@@ -154,10 +163,29 @@ impl Interpreter {
             Value::Float(_)                         => HolyType::Fractional,
             Value::Str(_)                           => HolyType::Word,
             Value::Bool(_)                          => HolyType::Dogma,
-            Value::Legion(_)                        => HolyType::Generic("legion".into(), vec![]),
-            Value::Void                             => HolyType::Void,
-            Value::CovenantVariant { covenant, .. } => HolyType::Custom(covenant.clone()),
-            Value::Scripture { type_name, .. }      => HolyType::Custom(type_name.clone()),
+            Value::Legion(items)                    => {
+                // Peek at the first element to infer the inner type.
+                // Empty legions get no type arg (accepted by value_matches_type).
+                let inner = items.first()
+                    .map(|v| vec![self.infer_type_from_value(v)])
+                    .unwrap_or_default();
+                HolyType::Generic("legion".into(), inner)
+            }
+            Value::Void                                         => HolyType::Void,
+            Value::CovenantVariant { covenant, type_args, .. } => {
+                if type_args.is_empty() {
+                    HolyType::Custom(covenant.clone())
+                } else {
+                    HolyType::Generic(covenant.clone(), type_args.clone())
+                }
+            }
+            Value::Scripture { type_name, type_args, .. } => {
+                if type_args.is_empty() {
+                    HolyType::Custom(type_name.clone())
+                } else {
+                    HolyType::Generic(type_name.clone(), type_args.clone())
+                }
+            }
         }
     }
 

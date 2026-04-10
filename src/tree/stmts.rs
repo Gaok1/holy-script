@@ -7,8 +7,18 @@ use super::exprs::{build_expr_tree, expr_label};
 
 pub(super) fn build_stmt_tree(stmt: &Stmt) -> Tree<String> {
     match stmt {
-        Stmt::DeclNoVal { name, ty } => {
+        Stmt::DeclNoVal { name, ty: Some(ty) } => {
             Tree::new(format!("let there be {}: {}", name, type_str(ty)))
+        }
+
+        Stmt::DeclNoVal { name, ty: None } => {
+            Tree::new(format!("let there be {} (untyped)", name))
+        }
+
+        Stmt::DeclInfer { name, val } => {
+            let mut tree = Tree::new(format!("let there {} =", name));
+            tree.push(build_expr_tree(val));
+            tree
         }
 
         Stmt::DeclVal { name, ty, val } => {

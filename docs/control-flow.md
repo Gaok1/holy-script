@@ -1,49 +1,49 @@
-# Controle de Fluxo
+# Control Flow
 
-Holy oferece condicionais com `whether` e loops com `litany for`. Não há `for` com iterador nem `do-while` — apenas o loop condicional.
+Holy provides conditionals with `whether` and loops with `litany for`. There is no iterator-based `for` or `do-while` — only the conditional loop.
 
 ---
 
-## Condicional — `whether`
+## Conditional — `whether`
 
 ```holy
-whether condição
-    -- bloco executado se verdadeiro
+whether condition
+    -- block executed if true
 ```
 
 ```holy
 let there x of atom be 7
 
 whether x greater than 10
-    hail proclaim praying "grande"
+    hail proclaim praying "large"
 otherwise so x is 10
-    hail proclaim praying "exatamente dez"
+    hail proclaim praying "exactly ten"
 otherwise
-    hail proclaim praying "pequeno"
+    hail proclaim praying "small"
 ```
 
-- `whether` avalia a condição. Se verdadeira, o bloco abaixo é executado.
-- `otherwise so condição` é um else-if (zero ou mais).
-- `otherwise` é o else final (opcional, no máximo um).
-- O primeiro ramo verdadeiro é executado; os demais são ignorados.
+- `whether` evaluates the condition. If true, the block below is executed.
+- `otherwise so condition` is an else-if (zero or more).
+- `otherwise` is the final else (optional, at most one).
+- The first true branch is executed; the rest are skipped.
 
-### Valores verdadeiros e falsos
+### Truthy and falsy values
 
-| Tipo         | Verdadeiro quando      |
-|--------------|------------------------|
-| `dogma`      | `blessed`              |
-| `atom`       | diferente de `0`       |
-| `fractional` | diferente de `0.0`     |
-| `word`       | string não vazia       |
-| `void`       | nunca                  |
-| scripture    | sempre                 |
-| covenant     | sempre                 |
+| Type         | Truthy when              |
+|--------------|--------------------------|
+| `dogma`      | `blessed`                |
+| `atom`       | not equal to `0`         |
+| `fractional` | not equal to `0.0`       |
+| `word`       | non-empty string         |
+| `void`       | never                    |
+| scripture    | always                   |
+| covenant     | always                   |
 
 ---
 
 ## Loop — `litany for`
 
-Repete o corpo enquanto a condição for verdadeira.
+Repeats the body while the condition is true.
 
 ```holy
 let there i of atom be 1
@@ -53,24 +53,24 @@ litany for i no greater than 5
     i become i plus 1
 ```
 
-Saída: `1`, `2`, `3`, `4`, `5` (um por linha).
+Output: `1`, `2`, `3`, `4`, `5` (one per line).
 
-A condição é avaliada antes de cada iteração. Se for falsa na primeira checagem, o corpo nunca roda.
+The condition is evaluated before each iteration. If it is false on the first check, the body never runs.
 
-**Loop infinito** — use `forsake` para sair:
+**Infinite loop** — use `forsake` to exit:
 
 ```holy
 litany for blessed
-    -- roda para sempre até um forsake
+    -- runs forever until a forsake
 ```
 
 ---
 
-## Controle de loop
+## Loop control
 
 ### `forsake` — break
 
-Encerra o `litany for` imediatamente.
+Exits the `litany for` immediately.
 
 ```holy
 let there i of atom be 1
@@ -82,11 +82,11 @@ litany for blessed
     i become i plus 1
 ```
 
-Saída: `1`, `2`, `3`, `4`
+Output: `1`, `2`, `3`, `4`
 
 ### `ascend` — continue
 
-Pula o restante da iteração atual e volta para checar a condição.
+Skips the rest of the current iteration and jumps back to the condition check.
 
 ```holy
 let there i of atom be 0
@@ -94,19 +94,19 @@ let there i of atom be 0
 litany for i lesser than 10
     i become i plus 1
     whether i remainder 2 is 0
-        ascend          -- pula números pares
+        ascend          -- skip even numbers
     hail proclaim praying hail word_of praying i
 ```
 
-Saída: `1`, `3`, `5`, `7`, `9`
+Output: `1`, `3`, `5`, `7`, `9`
 
-`forsake` e `ascend` só são válidos dentro de um `litany for`. Fora de um loop causam erro de runtime.
+`forsake` and `ascend` are only valid inside a `litany for`. Using them outside a loop causes a runtime error.
 
 ---
 
-## Loops aninhados
+## Nested loops
 
-`forsake` e `ascend` afetam apenas o `litany for` **mais interno**:
+`forsake` and `ascend` affect only the **innermost** `litany for`:
 
 ```holy
 let there i of atom be 1
@@ -115,13 +115,13 @@ litany for i no greater than 3
     let there j of atom be 1
     litany for j no greater than 3
         whether j is 2
-            forsake             -- sai apenas do loop interno
+            forsake             -- exits only the inner loop
         hail proclaim praying hail word_of praying i plus "," plus hail word_of praying j
         j become j plus 1
     i become i plus 1
 ```
 
-Saída:
+Output:
 ```
 1,1
 2,1
@@ -130,7 +130,7 @@ Saída:
 
 ---
 
-## Exemplo completo — FizzBuzz
+## Full example — FizzBuzz
 
 ```holy
 let there i of atom be 1
@@ -151,7 +151,7 @@ amen
 
 ---
 
-## Exemplo completo — soma de uma legion
+## Full example — summing a legion
 
 ```holy
 let there nums of legion of atom be hail legion praying 10, 20, 30, 40 and 50

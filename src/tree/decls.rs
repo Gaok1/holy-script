@@ -6,10 +6,15 @@ use super::{params_str, type_str};
 use super::stmts::build_stmt_tree;
 
 pub(super) fn build_testament_tree(testament: &Testament) -> Tree<String> {
+    let label = if testament.path.is_empty() {
+        testament.name.clone()
+    } else {
+        format!("{} from {}", testament.name, testament.path.join(" from "))
+    };
     let revealing = testament.revealing.as_ref()
         .map(|items| format!(" revealing {}", items.join(", ")))
         .unwrap_or_default();
-    Tree::new(format!("[testament] {}{}", testament.name, revealing))
+    Tree::new(format!("[testament] {}{}", label, revealing))
 }
 
 pub(super) fn build_top_decl_tree(decl: &TopDecl) -> Tree<String> {

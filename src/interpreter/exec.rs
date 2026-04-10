@@ -17,9 +17,14 @@ impl Interpreter {
 
     pub(super) fn exec_stmt(&mut self, stmt: &Stmt) -> ExecResult {
         match stmt {
-            Stmt::DeclNoVal { name, ty } => {
+            Stmt::DeclNoVal { name, ty: Some(ty) } => {
                 self.ensure_type_exists(ty)?;
                 self.env.define(name, ty.clone(), None);
+            }
+
+            // `let there be x` — untyped; type locked on first `become`
+            Stmt::DeclNoVal { name, ty: None } => {
+                self.env.define_untyped(name);
             }
 
             Stmt::DeclVal { name, ty, val } => {
@@ -29,14 +34,31 @@ impl Interpreter {
                 self.env.define(name, ty.clone(), Some(v));
             }
 
+            // `let there x be expr` — infer type from the expression value
+            Stmt::DeclInfer { name, val } => {
+                let v  = self.eval_expr(val)?;
+                let ty = self.infer_type_from_value(&v);
+                self.env.define(name, ty, Some(v));
+            }
+
             Stmt::Assign { name, val } => {
                 let v = self.eval_expr(val)?;
-                if let Some(var_ty) = self.env.get_type(name) {
-                    self.expect_type(&var_ty, &v, &format!("the offering for '{}' is profane and rejected", name))?;
-                    self.env.assign(name, v);
-                } else {
-                    let inferred_ty = self.infer_type_from_value(&v);
-                    self.env.define(name, inferred_ty, Some(v));
+                match self.env.get_binding_state(name) {
+                    // typed variable — enforce type
+                    Some(Some(var_ty)) => {
+                        self.expect_type(&var_ty, &v, &format!("the offering for '{}' is profane and rejected", name))?;
+                        self.env.assign(name, v);
+                    }
+                    // untyped variable — lock type on first assignment (divine grace)
+                    Some(None) => {
+                        let ty = self.infer_type_from_value(&v);
+                        self.env.lock_type(name, ty, v);
+                    }
+                    // variable doesn't exist — infer and create (flexible `become`)
+                    None => {
+                        let inferred_ty = self.infer_type_from_value(&v);
+                        self.env.define(name, inferred_ty, Some(v));
+                    }
                 }
             }
 
@@ -78,7 +100,7 @@ impl Interpreter {
 
             Stmt::Transgress { sin_type, args } => {
                 let fields = self.build_sin_fields(sin_type, args)?;
-                return Err(HolyError::Sin { type_name: sin_type.clone(), fields });
+                return Err(HolyError::Sin { type_name: sin_type.clone(), fields, stack_trace: vec![] });
             }
         }
         Ok(())
@@ -155,10 +177,11 @@ impl Interpreter {
 
     fn handle_sin(&mut self, try_result: ExecResult, handlers: &[SinHandler]) -> ExecResult {
         match try_result {
-            Err(HolyError::Sin { ref type_name, ref fields }) => {
+            Err(HolyError::Sin { ref type_name, ref fields, .. }) => {
                 if let Some(h) = handlers.iter().find(|h| &h.sin_type == type_name) {
                     let sin_val = Value::Scripture {
                         type_name: type_name.clone(),
+                        type_args: vec![],
                         fields:    fields.clone(),
                     };
                     let body = h.body.clone();

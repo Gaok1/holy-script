@@ -1,5 +1,5 @@
 /// Holy language types.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum HolyType {
     Atom,           // i64
     Fractional,     // f64
@@ -36,8 +36,10 @@ pub enum Expr {
     BinOp { op: BinOp, left: Box<Expr>, right: Box<Expr> },
     /// `hail salm (of type_args)? (praying args)?`
     FnCall { name: String, type_args: Vec<HolyType>, args: Vec<Expr> },
+
     /// `hail method upon <expr> (praying args)?`
     MethodCall { method: String, target: Box<Expr>, args: Vec<Expr> },
+    
     /// `manifest Scripture (praying args)?`
     Manifest { scripture: String, args: Vec<Expr> },
     /// `manifest variant of covenant (of type_args)? (praying args)?`
@@ -86,10 +88,13 @@ pub struct SinHandler {
 /// Statements.
 #[derive(Debug, Clone)]
 pub enum Stmt {
-    /// `let there be x of type`  — zero-initialised
-    DeclNoVal { name: String, ty: HolyType },
-    /// `let there x of type be expr`
+    /// `let there be x of type`  — zero-initialised with explicit type
+    /// `let there be x`          — untyped; type is locked on first `become`
+    DeclNoVal { name: String, ty: Option<HolyType> },
+    /// `let there x of type be expr`  — typed with initial value
     DeclVal   { name: String, ty: HolyType, val: Expr },
+    /// `let there x be expr`  — type inferred from value, then locked
+    DeclInfer { name: String, val: Expr },
     /// `x become expr`
     Assign    { name: String, val: Expr },
     /// `hail salm (of type_args)? (praying args)?`  as a statement
@@ -169,6 +174,9 @@ pub enum TopDecl {
 #[derive(Debug, Clone)]
 pub struct Testament {
     pub name:      String,
+    /// Subdirectory path segments from `from` clauses.
+    /// `testament abacate from pasta1 from pasta2` → `["pasta1", "pasta2"]`
+    pub path:      Vec<String>,
     /// `None` — import everything; `Some(list)` — import only the listed symbols.
     pub revealing: Option<Vec<String>>,
 }

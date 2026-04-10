@@ -1,0 +1,66 @@
+-- cosmos.holy — trigonometry and geometry showcase
+--
+-- Demonstrates:
+--   testament arithmos        (built-in math stdlib)
+--   testament ... from ...    (subdirectory import)
+--   sin, cos, atan2, sqrt     (built-in trig functions)
+
+testament arithmos
+testament circle from shapes
+
+-- ── Unit circle ───────────────────────────────────────────────────────────────
+
+hail proclaim praying "=== Unit Circle ==="
+
+let there angles of legion of fractional be hail legion praying 0.0, 90.0, 180.0 and 270.0
+let there i of atom be 0
+
+litany for i lesser than hail length upon angles
+    let there deg of fractional be hail at upon angles praying i
+    let there rad of fractional be hail to_radians praying deg
+    let there s      of fractional be hail sine praying rad
+    let there c      of fractional be hail cos praying rad
+    let there deg_s  of word be hail word_of praying deg
+    let there s_s    of word be hail word_of praying s
+    let there c_s    of word be hail word_of praying c
+
+    hail proclaim praying deg_s plus "°  sine=" plus s_s plus "  cos=" plus c_s
+    i become i plus 1
+
+-- ── Constants ─────────────────────────────────────────────────────────────────
+
+hail proclaim praying ""
+hail proclaim praying "=== Constants ==="
+hail proclaim praying "pi    = " plus hail word_of praying hail pi
+hail proclaim praying "tau   = " plus hail word_of praying hail tau
+hail proclaim praying "euler = " plus hail word_of praying hail euler
+
+-- ── Circle geometry ───────────────────────────────────────────────────────────
+
+hail proclaim praying ""
+hail proclaim praying "=== Circle (r = 5) ==="
+
+let there c of Circle be manifest Circle praying 5.0
+
+hail proclaim praying "area          = " plus hail word_of praying hail area upon c
+hail proclaim praying "circumference = " plus hail word_of praying hail circumference upon c
+hail proclaim praying "arc 90°       = " plus hail word_of praying hail arc_length upon c praying 90.0
+
+-- ── Hypotenuse (Pythagorean theorem via sqrt) ─────────────────────────────────
+
+hail proclaim praying ""
+hail proclaim praying "=== Right triangle (a=3, b=4) ==="
+
+let there a of fractional be 3.0
+let there b of fractional be 4.0
+let there hyp of fractional be hail sqrt praying a times a plus b times b
+
+hail proclaim praying "hypotenuse = " plus hail word_of praying hyp
+
+-- Angle opposite to side b using atan2
+let there angle_rad of fractional be hail atan2 praying b and a
+let there angle_deg of fractional be hail to_degrees praying angle_rad
+
+hail proclaim praying "angle (deg)= " plus hail word_of praying angle_deg
+
+amen

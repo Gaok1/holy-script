@@ -37,18 +37,32 @@ impl Parser {
         self.expect(&Token::There)?;
 
         if self.peek() == &Token::Be {
+            // `let there be x`          → untyped declaration
+            // `let there be x of type`  → typed zero-initialised declaration
             self.advance();
             let name = self.expect_ident()?;
-            self.expect(&Token::Of)?;
-            let ty = self.parse_type()?;
-            Ok(Stmt::DeclNoVal { name, ty })
+            if self.peek() == &Token::Of {
+                self.advance();
+                let ty = self.parse_type()?;
+                Ok(Stmt::DeclNoVal { name, ty: Some(ty) })
+            } else {
+                Ok(Stmt::DeclNoVal { name, ty: None })
+            }
         } else {
+            // `let there x of type be expr`  → typed declaration with value
+            // `let there x be expr`          → inferred declaration
             let name = self.expect_ident()?;
-            self.expect(&Token::Of)?;
-            let ty = self.parse_type()?;
-            self.expect(&Token::Be)?;
-            let val = self.parse_expr()?;
-            Ok(Stmt::DeclVal { name, ty, val })
+            if self.peek() == &Token::Of {
+                self.advance();
+                let ty = self.parse_type()?;
+                self.expect(&Token::Be)?;
+                let val = self.parse_expr()?;
+                Ok(Stmt::DeclVal { name, ty, val })
+            } else {
+                self.expect(&Token::Be)?;
+                let val = self.parse_expr()?;
+                Ok(Stmt::DeclInfer { name, val })
+            }
         }
     }
 

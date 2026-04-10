@@ -6,5 +6,8 @@
     },
     "fileExtensions": {
         "holy": "_holy_file"
+    },
+    "languageIds": {
+        "holy": "_holy_file"
     }
 }

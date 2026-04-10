@@ -3,7 +3,7 @@
 
 An interpreted, strongly typed programming language with archaic/biblical syntax, implemented in Rust.
 
-Types are declared explicitly and enforced at runtime. Variables, scripture fields, salm parameters, and return values must match their declared types.
+Types are enforced at runtime. Variables may be declared with an explicit type, or let Holy infer and lock the type from the first assigned value. Scripture fields, salm parameters, and return values always require explicit types.
 
 Across Holy's list syntax, the final separator may be written as `and`: `a and b`, `a, b and c`, `Pair of atom and word`, `receiving x of atom and y of atom`.
 
@@ -108,9 +108,11 @@ Every program **must** end with `amen`. Comments start with `--`.
 
 ### Variables
 ```holy
-let there be x of atom          -- declare, zero-initialised
-let there name of word be "Hi"  -- declare with value
-x become 99                     -- reassign
+let there be x of atom          -- typed, zero-initialised (default value)
+let there name of word be "Hi"  -- typed with initial value
+let there n be 42               -- inferred: type locked to atom immediately
+let there be result             -- untyped: type locked on first become
+x become 99                     -- reassign (must match locked type)
 ```
 
 For `scripture` values, reassignment also happens at the whole-value level: fields are readable with `from`, but inner fields are not directly mutable. To update one field, create a new `manifest ...` value and assign it back to the variable.

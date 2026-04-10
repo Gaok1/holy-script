@@ -110,14 +110,24 @@ impl Parser {
 
     fn parse_testament(&mut self) -> Result<Testament, ParseError> {
         self.expect(&Token::Testament)?;
+
         let name = self.expect_ident()?;
+
+        // Zero or more `from segment` clauses for subdirectory paths
+        let mut path = vec![];
+        while self.peek() == &Token::From {
+            self.advance();
+            path.push(self.expect_ident()?);
+        }
+
         let revealing = if self.peek() == &Token::Revealing {
             self.advance();
             Some(self.parse_ident_list()?)
         } else {
             None
         };
-        Ok(Testament { name, revealing })
+
+        Ok(Testament { name, path, revealing })
     }
 }
 

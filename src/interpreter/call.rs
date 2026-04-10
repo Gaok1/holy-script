@@ -41,7 +41,21 @@ impl Interpreter {
             })?
             .clone();
 
-        self.exec_salm_body(&def, None, args)
+        // Build type param bindings: use explicit type_args if provided,
+        // otherwise infer from the actual argument values.
+        let bindings = if !_type_args.is_empty() && !def.type_params.is_empty() {
+            def.type_params.iter().cloned()
+                .zip(_type_args.iter().cloned())
+                .collect()
+        } else if !def.type_params.is_empty() {
+            self.infer_type_bindings(&def.type_params, &def.params, &args)
+        } else {
+            std::collections::HashMap::new()
+        };
+
+        let salm_name = name.to_string();
+        self.exec_salm_body(&def, None, args, bindings)
+            .map_err(|e| e.push_frame(salm_name))
     }
 
     pub(super) fn call_method(
@@ -70,13 +84,21 @@ impl Interpreter {
 
         let def = self
             .methods
-            .get(&(method.to_string(), type_name))
+            .get(&(method.to_string(), type_name.clone()))
             .ok_or_else(|| {
                 builtin_sin("UndefinedMethod", format!("the rite '{}' is not known to the holy order", method))
             })?
             .clone();
 
-        self.exec_salm_body(&def, Some(target), args)
+        let bindings = if !def.type_params.is_empty() {
+            self.infer_type_bindings(&def.type_params, &def.params, &args)
+        } else {
+            std::collections::HashMap::new()
+        };
+
+        let frame = format!("{} upon {}", method, type_name);
+        self.exec_salm_body(&def, Some(target), args, bindings)
+            .map_err(|e| e.push_frame(frame))
     }
 
     // ── Built-in method dispatch ──────────────────────────────────────────────
@@ -340,6 +362,7 @@ impl Interpreter {
         def:      &SalmDef,
         self_val: Option<Value>,
         args:     Vec<Value>,
+        bindings: std::collections::HashMap<String, crate::ast::HolyType>,
     ) -> EvalResult {
         if args.len() != def.params.len() {
             return Err(builtin_sin(
@@ -352,6 +375,9 @@ impl Interpreter {
             ));
         }
 
+        // Push type param bindings so that resolve_type() and resolve_type_args()
+        // work correctly throughout this salm's body.
+        self.push_type_bindings(bindings);
         let saved = self.env.enter_call();
 
         if let Some(val) = self_val {
@@ -360,26 +386,30 @@ impl Interpreter {
         }
 
         for ((pname, pty), val) in def.params.iter().zip(args) {
-            if !self.is_abstract_type(pty, &def.type_params) {
-                self.expect_type(pty, &val, &format!("the offering for parameter '{}' is profane and rejected", pname))?;
+            let resolved = self.resolve_type(pty);
+            if self.is_concrete_type(&resolved) {
+                self.expect_type(&resolved, &val, &format!("the offering for parameter '{}' is profane and rejected", pname))?;
             }
-            self.env.define(pname, pty.clone(), Some(val));
+            self.env.define(pname, resolved, Some(val));
         }
 
         let result = self.exec_stmts(&def.body);
         self.env.exit_call(saved);
+        self.pop_type_bindings();
 
         match result {
             Ok(()) => {
                 let value = Value::Void;
-                if !self.is_abstract_type(&def.ret_type, &def.type_params) {
-                    self.expect_type(&def.ret_type, &value, "the salm's revelation is profane — its return defies the holy covenant")?;
+                let resolved_ret = self.resolve_type(&def.ret_type);
+                if self.is_concrete_type(&resolved_ret) {
+                    self.expect_type(&resolved_ret, &value, "the salm's revelation is profane — its return defies the holy covenant")?;
                 }
                 Ok(value)
             }
             Err(HolyError::Return(v)) => {
-                if !self.is_abstract_type(&def.ret_type, &def.type_params) {
-                    self.expect_type(&def.ret_type, &v, "invalid salm return")?;
+                let resolved_ret = self.resolve_type(&def.ret_type);
+                if self.is_concrete_type(&resolved_ret) {
+                    self.expect_type(&resolved_ret, &v, "invalid salm return")?;
                 }
                 Ok(v)
             }
