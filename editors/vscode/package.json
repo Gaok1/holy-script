@@ -2,7 +2,7 @@
     "name": "holy-script",
     "displayName": "Holy Script",
     "description": "Syntax highlighting, snippets, file icons and run support for Holy Script",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "Gaok1",
     "icon": "icon.png",
     "license": "MIT",
@@ -70,43 +70,43 @@
                 "textMateRules": [
                     {
                         "scope": "comment.line.double-dash.holy",
-                        "settings": { "foreground": "#5A7A52", "fontStyle": "italic" }
+                        "settings": { "foreground": "#6E9E60", "fontStyle": "italic" }
                     },
                     {
                         "scope": "string.quoted.double.holy",
-                        "settings": { "foreground": "#C9AA7C" }
+                        "settings": { "foreground": "#E0A060" }
                     },
                     {
                         "scope": "constant.numeric.holy",
-                        "settings": { "foreground": "#C9A84C" }
+                        "settings": { "foreground": "#FFD700" }
                     },
                     {
                         "scope": "constant.language.boolean.holy",
-                        "settings": { "foreground": "#E8C060", "fontStyle": "bold" }
+                        "settings": { "foreground": "#FFE040", "fontStyle": "bold" }
                     },
                     {
                         "scope": "storage.type.holy",
-                        "settings": { "foreground": "#6CA0DC" }
+                        "settings": { "foreground": "#4FC3F7" }
                     },
                     {
                         "scope": "support.type.holy",
-                        "settings": { "foreground": "#4EC9B0" }
+                        "settings": { "foreground": "#2EDFBE" }
                     },
                     {
                         "scope": "support.constant.holy",
-                        "settings": { "foreground": "#C3A96E", "fontStyle": "italic" }
+                        "settings": { "foreground": "#E8B84B", "fontStyle": "italic" }
                     },
                     {
                         "scope": "entity.name.type.holy",
-                        "settings": { "foreground": "#E0C896", "fontStyle": "italic" }
+                        "settings": { "foreground": "#FFE082", "fontStyle": "italic" }
                     },
                     {
                         "scope": "entity.name.function.holy",
-                        "settings": { "foreground": "#FFD966" }
+                        "settings": { "foreground": "#FFE44D" }
                     },
                     {
                         "scope": "entity.name.namespace.holy",
-                        "settings": { "foreground": "#D4B060" }
+                        "settings": { "foreground": "#FFC107" }
                     },
                     {
                         "scope": "variable.language.holy",
@@ -114,43 +114,43 @@
                     },
                     {
                         "scope": "variable.other.holy",
-                        "settings": { "foreground": "#D4D4D4" }
+                        "settings": { "foreground": "#E8E8E8" }
                     },
                     {
                         "scope": "variable.type.parameter.holy",
-                        "settings": { "foreground": "#B088D0", "fontStyle": "italic" }
+                        "settings": { "foreground": "#D09BF5", "fontStyle": "italic" }
                     },
                     {
                         "scope": "keyword.other.invocation.holy",
-                        "settings": { "foreground": "#E8A830", "fontStyle": "bold" }
+                        "settings": { "foreground": "#FFB300", "fontStyle": "bold" }
                     },
                     {
                         "scope": "keyword.control.import.holy",
-                        "settings": { "foreground": "#C9A84C" }
+                        "settings": { "foreground": "#FFB300" }
                     },
                     {
                         "scope": "keyword.declaration.function.holy",
-                        "settings": { "foreground": "#C9A84C", "fontStyle": "bold" }
+                        "settings": { "foreground": "#FFD700", "fontStyle": "bold" }
                     },
                     {
                         "scope": "keyword.declaration.class.holy",
-                        "settings": { "foreground": "#B8950A" }
+                        "settings": { "foreground": "#FFA726" }
                     },
                     {
                         "scope": "keyword.declaration.holy",
-                        "settings": { "foreground": "#B09030" }
+                        "settings": { "foreground": "#FFC107" }
                     },
                     {
                         "scope": "keyword.control.holy",
-                        "settings": { "foreground": "#C49A3C" }
+                        "settings": { "foreground": "#FFB74D" }
                     },
                     {
                         "scope": "keyword.control.flow.holy",
-                        "settings": { "foreground": "#D4875A" }
+                        "settings": { "foreground": "#FF8A65" }
                     },
                     {
                         "scope": "keyword.control.grouping.holy",
-                        "settings": { "foreground": "#7B9BAD" }
+                        "settings": { "foreground": "#81C9E8" }
                     },
                     {
                         "scope": "keyword.control.exception.holy",
@@ -158,19 +158,19 @@
                     },
                     {
                         "scope": "keyword.control.bearing.holy",
-                        "settings": { "foreground": "#C49A3C", "fontStyle": "italic" }
+                        "settings": { "foreground": "#FFB74D", "fontStyle": "italic" }
                     },
                     {
                         "scope": "keyword.operator.holy",
-                        "settings": { "foreground": "#A0A0A0" }
+                        "settings": { "foreground": "#C8C8C8" }
                     },
                     {
                         "scope": "keyword.operator.comparison.holy",
-                        "settings": { "foreground": "#C0B080" }
+                        "settings": { "foreground": "#D4C870" }
                     },
                     {
                         "scope": "keyword.other.holy",
-                        "settings": { "foreground": "#8A7A5A" }
+                        "settings": { "foreground": "#A89060" }
                     }
                 ]
             }
